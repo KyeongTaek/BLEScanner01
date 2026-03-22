@@ -12,6 +12,8 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ArrayAdapter;
 import java.util.ArrayList;
+import java.io.File;
+import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -50,9 +52,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE = 100;
 
+    private final ArrayList<SensorData> sensorDataList = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
@@ -93,45 +99,61 @@ public class MainActivity extends AppCompatActivity {
                     StringBuilder sb = new StringBuilder();
                     for (byte b : scanData) {
                         sb.append(String.format("%02X ", b));
-                        //byte[] 16진수로 변환
                     }
                     rawDataString = sb.toString();
+
+//                    String deviceAddress = device.getAddress();
+//                    int rssi = result.getRssi();
+//                    String uuid = "0000181A-0000-1000-8000-00805F9B34FB";
+//
+//                    handleScannedData(scanData, deviceAddress, deviceName, rssi, uuid);
+                    //handleScannedData() 두번 호출돼서 삭제
+
                 } else {
                     rawDataString = "데이터 없음";
                 }
 
                 logData.add("[" + deviceName + "] " + rawDataString);
-                if (result.getScanRecord() != null) {
+                logAdapter.notifyDataSetChanged();
 
-                    // 0x181A UUID (Environmental Sensing)
-                    ParcelUuid uuid = ParcelUuid.fromString("0000181A-0000-1000-8000-00805F9B34FB");
+                if (scanData != null) {
 
-                    byte[] serviceData = result.getScanRecord().getServiceData(uuid);
+                    String deviceAddress = device.getAddress(); //MAC주소 받아오는부분
+                    int rssi = result.getRssi(); //신호세기
+                    String uuid = "0000181A-0000-1000-8000-00805F9B34FB";
 
-                    if (serviceData != null && serviceData.length >= 4) {
-
-                        // 리틀 엔디안 → 바이트 뒤집어서 계산
-
-                        // CO2 (앞 2바이트)
-                        int co2 = ((serviceData[1] & 0xFF) << 8) | (serviceData[0] & 0xFF);
-
-                        // 온도 (뒤 2바이트)
-                        int tempRaw = ((serviceData[3] & 0xFF) << 8) | (serviceData[2] & 0xFF);
-
-                        double temperature = tempRaw / 100.0;
-
-                        logData.add("CO2: " + co2 + " ppm");
-                        logData.add("Temp: " + temperature + " °C");
-
-                    } else {
-                        logData.add("서비스 데이터 없음 또는 길이 부족");
-                    }
-                } //CO2 농도, 온도 로그에 출력하는 부분 추가
+                    handleScannedData(scanData, deviceAddress, deviceName, rssi, uuid);
+                }
 
                 logAdapter.notifyDataSetChanged();
                 logListView.smoothScrollToPosition(logData.size() - 1);
+
             }
+            public void onScanFailed(int errorCode) { //스캔 실패 시
+                String errorMsg;
+
+                switch (errorCode) {
+                    case ScanCallback.SCAN_FAILED_ALREADY_STARTED:
+                        errorMsg = "이미 스캔 중";
+                        break;
+                    case ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED:
+                        errorMsg = "앱 등록 실패";
+                        break;
+                    case ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED:
+                        errorMsg = "BLE 기능 미지원";
+                        break;
+                    case ScanCallback.SCAN_FAILED_INTERNAL_ERROR:
+                        errorMsg = "내부 오류";
+                        break;
+                    default:
+                        errorMsg = "알 수 없는 오류";
+                }
+
+                Log.e("BLE_SCAN", "스캔 실패: " + errorMsg + " (code=" + errorCode + ")");
+            }
+
         };
+
 
         btnScan.setOnClickListener(v -> {
 
@@ -211,8 +233,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnSave.setOnClickListener(v -> {
-            logData.add("저장");
-            logAdapter.notifyDataSetChanged();
+            saveSensorDataToCsv();
         });
 
         checkPermission();
@@ -224,6 +245,20 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void saveSensorDataToCsv() {
+
+        if (sensorDataList.isEmpty()) {
+            Log.d("TEST", "저장할 데이터 없음");
+            return;
+        }
+
+        try {
+            File file = CsvWriter.writeCsv(this, sensorDataList);
+            Log.d("TEST", "CSV 저장 성공: " + file.getAbsolutePath());
+        } catch (Exception e) {
+            Log.e("TEST", "CSV 저장 실패", e);
+        }
+    }
     // 권한 체크
     public void checkPermission() {
 
@@ -270,5 +305,16 @@ public class MainActivity extends AppCompatActivity {
 
         return lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
                 || lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+    }
+
+    public void handleScannedData(byte[] rawData, String deviceAddress, String deviceName, int rssi, String uuid) {
+        SensorData data = SensorParser.parse(rawData, deviceAddress, deviceName, rssi, uuid);
+
+        if (data == null) {
+            Log.d("TEST", "파싱 실패");
+            return;
+        }
+
+        sensorDataList.add(data);
     }
 }
