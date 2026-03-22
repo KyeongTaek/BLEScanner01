@@ -71,10 +71,10 @@ public class MainActivity extends AppCompatActivity {
         logAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, logData);
         logListView.setAdapter(logAdapter);
 
-        // BLE 스캔 콜백 (전역으로 사용)
+        //BLE 스캔 콜백 (전역으로 사용)
         scanCallback = new ScanCallback() {
             @SuppressLint("MissingPermission")
-            @Override
+            @Override //스캔 결과 처리
             public void onScanResult(int callbackType, ScanResult result) {
 
                 BluetoothDevice device = result.getDevice();
@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                 // Raw 데이터 추출
                 byte[] scanData = null;
                 if (result.getScanRecord() != null) {
-                    scanData = result.getScanRecord().getBytes();
+                    scanData = result.getScanRecord().getBytes(); //바이트 배열 로그로 찍음
                 }
 
                 String rawDataString;
@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
                     StringBuilder sb = new StringBuilder();
                     for (byte b : scanData) {
                         sb.append(String.format("%02X ", b));
+                        //byte[] 16진수로 변환
                     }
                     rawDataString = sb.toString();
                 } else {
@@ -100,6 +101,33 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 logData.add("[" + deviceName + "] " + rawDataString);
+                if (result.getScanRecord() != null) {
+
+                    // 0x181A UUID (Environmental Sensing)
+                    ParcelUuid uuid = ParcelUuid.fromString("0000181A-0000-1000-8000-00805F9B34FB");
+
+                    byte[] serviceData = result.getScanRecord().getServiceData(uuid);
+
+                    if (serviceData != null && serviceData.length >= 4) {
+
+                        // 리틀 엔디안 → 바이트 뒤집어서 계산
+
+                        // CO2 (앞 2바이트)
+                        int co2 = ((serviceData[1] & 0xFF) << 8) | (serviceData[0] & 0xFF);
+
+                        // 온도 (뒤 2바이트)
+                        int tempRaw = ((serviceData[3] & 0xFF) << 8) | (serviceData[2] & 0xFF);
+
+                        double temperature = tempRaw / 100.0;
+
+                        logData.add("CO2: " + co2 + " ppm");
+                        logData.add("Temp: " + temperature + " °C");
+
+                    } else {
+                        logData.add("서비스 데이터 없음 또는 길이 부족");
+                    }
+                } //CO2 농도, 온도 로그에 출력하는 부분 추가
+
                 logAdapter.notifyDataSetChanged();
                 logListView.smoothScrollToPosition(logData.size() - 1);
             }
