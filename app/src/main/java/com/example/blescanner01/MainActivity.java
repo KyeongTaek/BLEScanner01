@@ -2,6 +2,7 @@ package com.example.blescanner01;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -34,6 +35,14 @@ import android.os.ParcelUuid;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +60,10 @@ public class MainActivity extends AppCompatActivity {
     List<Map<String, String>> scanData; // scan 정보 추가
     SimpleAdapter scanAdapter; // scan 리스트에 넣어주는 어댑터 추가
     List<BluetoothDevice> deviceList = new ArrayList<>(); // 중복 제거하기 위한 디바이스 리스트
+
+    private LineChart lineChart; // 차트
+    private LineDataSet co2DataSet; // co2용 데이터셋
+    private LineDataSet tempDataSet; // 온도용 데이터셋
 
     BluetoothAdapter bluetoothAdapter;
     BluetoothLeScanner bluetoothLeScanner;
@@ -92,6 +105,17 @@ public class MainActivity extends AppCompatActivity {
                 new int[] {android.R.id.text1, android.R.id.text2}
         );
         scanView.setAdapter(scanAdapter);
+
+
+        lineChart = findViewById(R.id.lineChart);
+        co2DataSet = createDataSet("CO2 (ppm)", Color.RED); // co2 데이터셋 생성
+        tempDataSet = createDataSet("Temperature (°C)", Color.BLUE); // 온도 데이터셋 생성
+        tempDataSet.setAxisDependency(YAxis.AxisDependency.RIGHT); // 오른쪽 y축을 온도 축으로 설정
+
+        LineData lineData = new LineData(co2DataSet, tempDataSet); // linedata에 두 데이터셋 추가
+        lineChart.setData(lineData);
+
+        lineChart.invalidate(); // 차트 새로고침
 
 
         logListView = findViewById(R.id.log_list);
@@ -378,6 +402,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        runOnUiThread(() -> addEntry(data.getCo2(), data.getTemperature())); // main thread(ui) 업데이트 위한 runonuithread
+
         sensorDataList.add(data);
     }
     private void addItemToScanList(String title, String desc) { // 리스트에 새로 추가하는 함수
@@ -395,5 +421,36 @@ public class MainActivity extends AppCompatActivity {
         scanData.set(idx, newItem);
 
         scanAdapter.notifyDataSetChanged();
+    }
+
+    private LineDataSet createDataSet(String label, int color) { // 데이터셋 설정
+        LineDataSet set = new LineDataSet(new ArrayList<>(), label);
+        set.setColor(color);
+        set.setCircleColor(color);
+        set.setDrawCircles(false); // 점 안 그림
+        set.setMode(LineDataSet.Mode.CUBIC_BEZIER); // 부드러운 곡선
+        return set;
+    }
+
+    public void addEntry(int co2Value, float tempValue) { // 실시간 데이터 추가 함수
+        LineData data = lineChart.getData();
+
+        if(data != null) {
+            // 각 데이터셋 가져옴
+            ILineDataSet set0 = data.getDataSetByIndex(0);
+            ILineDataSet set1 = data.getDataSetByIndex(1);
+
+            // 새로운 데이터 추가
+            data.addEntry(new Entry(set0.getEntryCount(), co2Value), 0);
+            data.addEntry(new Entry(set1.getEntryCount(), tempValue), 1);
+
+            // 차트에 데이터 변경 알림
+            data.notifyDataChanged();
+            lineChart.notifyDataSetChanged();
+
+            // 20개까지만 화면에 보이게
+            lineChart.setVisibleXRangeMaximum(20);
+            lineChart.moveViewToX(data.getEntryCount());
+        }
     }
 }
