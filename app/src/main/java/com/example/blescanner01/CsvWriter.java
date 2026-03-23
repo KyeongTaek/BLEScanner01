@@ -14,61 +14,23 @@ public class CsvWriter {
         if (dir == null) { throw new Exception("외부 저장소 경로를 가져오지 못했습니다.");}
 
         File file = new File(dir, "sensor_data.csv");
-        FileWriter writer = new FileWriter(file, false);
+        FileWriter writer = new FileWriter(file, true); // 텍스트 뒤로 이어쓰기 허용
 
-
-
+        // ppt 형식에 맞게 수정
         for (SensorData data : dataList) {
-
-            writer.append("Time: ");
-            writer.append(csvSafe(data.getTime()));
-            writer.append("\n");
-
-            writer.append("deviceAddress: ");
-            writer.append(csvSafe(data.getDeviceAddress()));
-            writer.append("\n");
-
-
-            writer.append("deviceName: ");
-            writer.append(csvSafe(data.getDeviceName()));
-            writer.append("\n");
-
-
-            writer.append("Co2: ");
-            writer.append(String.valueOf(data.getCo2()));
-            writer.append(" ppm");
-            writer.append("\n");
-
-
-            writer.append("Temp: ");
-            writer.append(String.valueOf(data.getTemperature()));
-            writer.append(" °C");
-            writer.append("\n");
-
-
-            writer.append("rawHex: ");
-            writer.append(csvSafe(data.getRawHex()));
-            writer.append("\n");
-
-
-            writer.append("Rssi: ");
-            writer.append(String.valueOf((data.getRssi())));
-            writer.append("\n");
-
-
-            writer.append("Uuid: ");
-            writer.append(csvSafe(data.getUuid()));
-            writer.append("\n");
+            writer.append("timestamp,device_name,device_address,rssi,uuid,co2,temperature\n");
+            writer.append(csvSafe(data.getTime())).append(",")
+                            .append(csvSafe(data.getDeviceName())).append(",")
+                            .append(csvSafe(data.getDeviceAddress())).append(",")
+                            .append(String.valueOf((data.getRssi()))).append(",")
+                            .append(csvSafe(data.getUuid())).append(",")
+                            .append(String.valueOf(data.getCo2())).append(" ppm,")
+                            .append(String.valueOf(data.getTemperature())).append(" °C\n");
         }
 
         writer.flush();
         writer.close();
         return file;
-
-
-
-
-
     }
     private static String csvSafe(String value) {
 
