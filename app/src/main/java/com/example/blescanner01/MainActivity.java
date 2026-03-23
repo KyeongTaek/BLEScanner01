@@ -31,17 +31,26 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.os.ParcelUuid;
+import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
     Button btnScan, btnStop, btnRefresh, btnSave;
-    ListView logListView;
 
+    ListView logListView;
     ArrayList<String> logData;
     ArrayAdapter<String> logAdapter;
+
+    ListView scanView; // scan 정보 담는 리스트 추가
+    List<Map<String, String>> scanData; // scan 정보 추가
+    SimpleAdapter scanAdapter; // scan 리스트에 넣어주는 어댑터 추가
+    List<BluetoothDevice> deviceList = new ArrayList<>(); // 중복 제거하기 위한 디바이스 리스트
 
     BluetoothAdapter bluetoothAdapter;
     BluetoothLeScanner bluetoothLeScanner;
@@ -71,6 +80,20 @@ public class MainActivity extends AppCompatActivity {
         btnRefresh = findViewById(R.id.button3);
         btnSave = findViewById(R.id.button4);
 
+
+        scanView = findViewById(R.id.scan_list); // scan 리스트 추가
+
+        scanData = new ArrayList<>();
+        scanAdapter = new SimpleAdapter(
+                this,
+                scanData,
+                android.R.layout.simple_list_item_2,
+                new String[] {"title", "subtitle"},
+                new int[] {android.R.id.text1, android.R.id.text2}
+        );
+        scanView.setAdapter(scanAdapter);
+
+
         logListView = findViewById(R.id.log_list);
 
         logData = new ArrayList<>();
@@ -87,47 +110,45 @@ public class MainActivity extends AppCompatActivity {
                 String deviceName = device.getName();
                 if (deviceName == null) deviceName = "이름 없음";
 
+                String deviceAddress = device.getAddress(); //MAC주소 받아오는부분
+                int rssi = result.getRssi(); //신호세기
+                String uuid = "0000181A-0000-1000-8000-00805F9B34FB";
+
+
                 // Raw 데이터 추출
-                byte[] scanData = null;
+                byte[] rawData = null;
                 if (result.getScanRecord() != null) {
-                    scanData = result.getScanRecord().getBytes(); //바이트 배열 로그로 찍음
+                    rawData = result.getScanRecord().getBytes(); //바이트 배열 로그로 찍음
                 }
 
-                String rawDataString;
-
-                if (scanData != null) {
-                    StringBuilder sb = new StringBuilder();
-                    for (byte b : scanData) {
-                        sb.append(String.format("%02X ", b));
+                boolean isDuplicate = false;
+                int idx = 0;
+                for(BluetoothDevice d : deviceList) { // 리스트에 해당 장치가 들어온 적 있는지 확인
+                    if(d.getAddress().equals(deviceAddress)) {
+                        isDuplicate = true;
+                        break;
                     }
-                    rawDataString = sb.toString();
-
-//                    String deviceAddress = device.getAddress();
-//                    int rssi = result.getRssi();
-//                    String uuid = "0000181A-0000-1000-8000-00805F9B34FB";
-//
-//                    handleScannedData(scanData, deviceAddress, deviceName, rssi, uuid);
-                    //handleScannedData() 두번 호출돼서 삭제
-
-                } else {
-                    rawDataString = "데이터 없음";
+                    idx = idx + 1;
                 }
 
-                logData.add("[" + deviceName + "] " + rawDataString);
-                logAdapter.notifyDataSetChanged();
-
-                if (scanData != null) {
-
-                    String deviceAddress = device.getAddress(); //MAC주소 받아오는부분
-                    int rssi = result.getRssi(); //신호세기
-                    String uuid = "0000181A-0000-1000-8000-00805F9B34FB";
-
-                    handleScannedData(scanData, deviceAddress, deviceName, rssi, uuid);
+                String dataString = null;
+                if(deviceName != null && rawData != null) {
+                    if(!isDuplicate) { // 리스트에 해당 장치가 들어온 적 없으면
+                        dataString = "MAC: " + deviceAddress + "\nRSSI: " + rssi + "\n" + result.getScanRecord();
+                        deviceList.add(device); // 리스트에 새로 추가
+                        addItemToScanList(deviceName, dataString);
+                    }
+                    else { // 리스트에 해당 장치가 들어온 적 있으면
+                        dataString = "MAC: " + deviceAddress + "\nRSSI: " + rssi + "\n" + result.getScanRecord();
+                        addItemToScanList(deviceName, dataString, idx); // 리스트의 기존 자리 수정
+                    }
                 }
 
-                logAdapter.notifyDataSetChanged();
-                logListView.smoothScrollToPosition(logData.size() - 1);
+                if (rawData != null) {
 
+
+                    handleScannedData(rawData, deviceAddress, deviceName, rssi, uuid);
+                }
             }
             public void onScanFailed(int errorCode) { //스캔 실패 시
                 String errorMsg;
@@ -150,12 +171,17 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 Log.e("BLE_SCAN", "스캔 실패: " + errorMsg + " (code=" + errorCode + ")");
+                logData.add("[BLE_SCAN] 스캔 실패: " + errorMsg + " (code=" + errorCode + ")"); // 로그 뷰 나타내는 부분 추가
+                logAdapter.notifyDataSetChanged();
+                logListView.smoothScrollToPosition(logData.size() - 1);
             }
 
         };
 
 
         btnScan.setOnClickListener(v -> {
+            btnScan.setEnabled(false); // 스캔 버튼 누르지 않게
+            btnStop.setEnabled(true); // 스톱 버튼 누를 수 있게
 
             // 이미 스캔 중이면 중복 실행 방지
             if (isScanning) {
@@ -183,9 +209,13 @@ public class MainActivity extends AppCompatActivity {
 
             // 로그 초기화 (선택 사항)
             logData.clear();
+            // 스캔 목록 초기화
+            scanData.clear();
 
             logData.add("스캔 시작");
             logAdapter.notifyDataSetChanged();
+
+            Toast.makeText(this, "scanning start", Toast.LENGTH_LONG);
 
             // UUID 필터 설정
             UUID serviceUUID = UUID.fromString("0000181A-0000-1000-8000-00805F9B34FB");
@@ -209,6 +239,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnStop.setOnClickListener(v -> {
+            btnScan.setEnabled(true); // 스캔 버튼 누를 수 있도록
+            btnStop.setEnabled(false); // 스톱 버튼 누르지 않도록
 
             // 스캔 중이 아닐 때 방지
             if (!isScanning) {
@@ -222,11 +254,14 @@ public class MainActivity extends AppCompatActivity {
             logData.add("스캔 중지");
             logAdapter.notifyDataSetChanged();
 
+            Toast.makeText(this, "scanning stop", Toast.LENGTH_LONG);
+
             // 상태 OFF
             isScanning = false;
         });
 
         btnRefresh.setOnClickListener(v -> {
+            scanData.clear();
             logData.clear();
             logData.add("리프레시");
             logAdapter.notifyDataSetChanged();
@@ -245,18 +280,28 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void saveSensorDataToCsv() {
+    public void saveSensorDataToCsv() {  // 로그 뷰에 나타나게 하는 부분 추가
 
         if (sensorDataList.isEmpty()) {
             Log.d("TEST", "저장할 데이터 없음");
+            logData.add("[Test] 저장할 데이터 없음");
+            logAdapter.notifyDataSetChanged();
+            logListView.smoothScrollToPosition(logData.size() - 1);
+
             return;
         }
 
         try {
             File file = CsvWriter.writeCsv(this, sensorDataList);
             Log.d("TEST", "CSV 저장 성공: " + file.getAbsolutePath());
+            logData.add("[TEST] CSV 저장 성공: " + file.getAbsolutePath());
+            logAdapter.notifyDataSetChanged();
+            logListView.smoothScrollToPosition(logData.size() - 1);
         } catch (Exception e) {
             Log.e("TEST", "CSV 저장 실패", e);
+            logData.add("[TEST] CSV 저장 실패: " + e);
+            logAdapter.notifyDataSetChanged();
+            logListView.smoothScrollToPosition(logData.size() - 1);
         }
     }
     // 권한 체크
@@ -298,6 +343,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) { // 성공/실패 팝업 메시지 추가
+            case REQUEST_CODE:
+                int i;
+                for(i=0;i<grantResults.length;i++) {
+                    int grantResult = grantResults[i];
+                    String permission = permissions[i];
+                    if(grantResult == PackageManager.PERMISSION_DENIED) {
+                        Toast.makeText(this, permission + " 권한 실패", Toast.LENGTH_LONG);
+                    }
+                    else if(grantResult == PackageManager.PERMISSION_GRANTED) {
+                        Toast.makeText(this, permission + " 권한 성공", Toast.LENGTH_LONG);
+                    }
+                }
+        }
     }
 
     public boolean isLocationEnabled() {
@@ -310,11 +370,30 @@ public class MainActivity extends AppCompatActivity {
     public void handleScannedData(byte[] rawData, String deviceAddress, String deviceName, int rssi, String uuid) {
         SensorData data = SensorParser.parse(rawData, deviceAddress, deviceName, rssi, uuid);
 
-        if (data == null) {
+        if (data == null) { // 로그 뷰에 나타나게 하는 부분 추가
             Log.d("TEST", "파싱 실패");
+            logData.add("[TEST] 파싱 실패");
+            logAdapter.notifyDataSetChanged();
+            logListView.smoothScrollToPosition(logData.size() - 1);
             return;
         }
 
         sensorDataList.add(data);
+    }
+    private void addItemToScanList(String title, String desc) { // 리스트에 새로 추가하는 함수
+        HashMap<String, String> newItem = new HashMap<>();
+        newItem.put("title", title);
+        newItem.put("subtitle", desc);
+        scanData.add(newItem);
+
+        scanAdapter.notifyDataSetChanged();
+    }
+    private void addItemToScanList(String title, String desc, int idx) { // 리스트의 기존 자리 수정하는 함수
+        HashMap<String, String> newItem = new HashMap<>();
+        newItem.put("title", title);
+        newItem.put("subtitle", desc);
+        scanData.set(idx, newItem);
+
+        scanAdapter.notifyDataSetChanged();
     }
 }
