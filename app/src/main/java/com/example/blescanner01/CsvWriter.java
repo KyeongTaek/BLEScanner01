@@ -14,11 +14,16 @@ public class CsvWriter {
         if (dir == null) { throw new Exception("외부 저장소 경로를 가져오지 못했습니다.");}
 
         File file = new File(dir, "sensor_data.csv");
+
+        boolean isNewFile = !file.exists();
+
         FileWriter writer = new FileWriter(file, true); // 텍스트 뒤로 이어쓰기 허용
 
+        if(isNewFile) {
+            writer.append("timestamp,device_name,device_address,rssi,uuid,co2,temperature\n");
+        }
         // ppt 형식에 맞게 수정
         for (SensorData data : dataList) {
-            writer.append("timestamp,device_name,device_address,rssi,uuid,co2,temperature\n");
             writer.append(csvSafe(data.getTime())).append(",")
                             .append(csvSafe(data.getDeviceName())).append(",")
                             .append(csvSafe(data.getDeviceAddress())).append(",")

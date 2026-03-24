@@ -25,7 +25,6 @@ public class SensorParser {
     public static SensorData parse(byte[] rawData, String deviceAddress, String deviceName,
                                    int rssi, String uuid){
         if (rawData == null){return null;}
-        if(rawData.length < 4){return null;}
         if (deviceName == null){deviceName = "unknown";}
         if (uuid == null) {uuid = "unknown";}
 

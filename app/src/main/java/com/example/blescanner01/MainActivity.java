@@ -124,84 +124,6 @@ public class MainActivity extends AppCompatActivity {
         logAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, logData);
         logListView.setAdapter(logAdapter);
 
-        //BLE 스캔 콜백 (전역으로 사용)
-        scanCallback = new ScanCallback() {
-            @SuppressLint("MissingPermission")
-            @Override //스캔 결과 처리
-            public void onScanResult(int callbackType, ScanResult result) {
-
-                BluetoothDevice device = result.getDevice();
-                String deviceName = device.getName();
-                if (deviceName == null) deviceName = "이름 없음";
-
-                String deviceAddress = device.getAddress(); //MAC주소 받아오는부분
-                int rssi = result.getRssi(); //신호세기
-                String uuid = "0000181A-0000-1000-8000-00805F9B34FB";
-
-
-                // Raw 데이터 추출
-                byte[] rawData = null;
-                if (result.getScanRecord() != null) {
-                    rawData = result.getScanRecord().getBytes(); //바이트 배열 로그로 찍음
-                }
-
-                boolean isDuplicate = false;
-                int idx = 0;
-                for(BluetoothDevice d : deviceList) { // 리스트에 해당 장치가 들어온 적 있는지 확인
-                    if(d.getAddress().equals(deviceAddress)) {
-                        isDuplicate = true;
-                        break;
-                    }
-                    idx = idx + 1;
-                }
-
-                String dataString = null;
-                if(deviceName != null && rawData != null) {
-                    if(!isDuplicate) { // 리스트에 해당 장치가 들어온 적 없으면
-                        dataString = "MAC: " + deviceAddress + "\nRSSI: " + rssi + "\n" + result.getScanRecord();
-                        deviceList.add(device); // 리스트에 새로 추가
-                        addItemToScanList(deviceName, dataString);
-                    }
-                    else { // 리스트에 해당 장치가 들어온 적 있으면
-                        dataString = "MAC: " + deviceAddress + "\nRSSI: " + rssi + "\n" + result.getScanRecord();
-                        addItemToScanList(deviceName, dataString, idx); // 리스트의 기존 자리 수정
-                    }
-                }
-
-                if (rawData != null) {
-
-
-                    handleScannedData(rawData, deviceAddress, deviceName, rssi, uuid);
-                }
-            }
-            public void onScanFailed(int errorCode) { //스캔 실패 시
-                String errorMsg;
-
-                switch (errorCode) {
-                    case ScanCallback.SCAN_FAILED_ALREADY_STARTED:
-                        errorMsg = "이미 스캔 중";
-                        break;
-                    case ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED:
-                        errorMsg = "앱 등록 실패";
-                        break;
-                    case ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED:
-                        errorMsg = "BLE 기능 미지원";
-                        break;
-                    case ScanCallback.SCAN_FAILED_INTERNAL_ERROR:
-                        errorMsg = "내부 오류";
-                        break;
-                    default:
-                        errorMsg = "알 수 없는 오류";
-                }
-
-                Log.e("BLE_SCAN", "스캔 실패: " + errorMsg + " (code=" + errorCode + ")");
-                logData.add("[BLE_SCAN] 스캔 실패: " + errorMsg + " (code=" + errorCode + ")"); // 로그 뷰 나타내는 부분 추가
-                logAdapter.notifyDataSetChanged();
-                logListView.smoothScrollToPosition(logData.size() - 1);
-            }
-
-        };
-
 
         btnScan.setOnClickListener(v -> {
             btnScan.setEnabled(false); // 스캔 버튼 누르지 않게
@@ -213,6 +135,85 @@ public class MainActivity extends AppCompatActivity {
                 logAdapter.notifyDataSetChanged();
                 return;
             }
+
+            //BLE 스캔 콜백 (전역으로 사용)
+            scanCallback = new ScanCallback() {
+                @SuppressLint("MissingPermission")
+                @Override //스캔 결과 처리
+                public void onScanResult(int callbackType, ScanResult result) {
+
+                    BluetoothDevice device = result.getDevice();
+                    String deviceName = device.getName();
+                    if (deviceName == null) deviceName = "이름 없음";
+
+                    String deviceAddress = device.getAddress(); //MAC주소 받아오는부분
+                    int rssi = result.getRssi(); //신호세기
+                    String uuid = "0000181A-0000-1000-8000-00805F9B34FB";
+
+
+
+                    // Raw 데이터 추출
+                    byte[] rawData = null;
+                    if (result.getScanRecord() != null) {
+                        rawData = result.getScanRecord().getServiceData(ParcelUuid.fromString(uuid));
+                    }
+
+                    boolean isDuplicate = false;
+                    int idx = 0;
+                    for(BluetoothDevice d : deviceList) { // 리스트에 해당 장치가 들어온 적 있는지 확인
+                        if(d.getAddress().equals(deviceAddress)) {
+                            isDuplicate = true;
+                            break;
+                        }
+                        idx = idx + 1;
+                    }
+
+                    String dataString = null;
+                    if(deviceName != null && rawData != null) {
+                        if(!isDuplicate) { // 리스트에 해당 장치가 들어온 적 없으면
+                            dataString = "MAC: " + deviceAddress + "\nRSSI: " + rssi + "\n" + result.getScanRecord();
+                            deviceList.add(device); // 리스트에 새로 추가
+                            addItemToScanList(deviceName, dataString);
+                        }
+                        else { // 리스트에 해당 장치가 들어온 적 있으면
+                            dataString = "MAC: " + deviceAddress + "\nRSSI: " + rssi + "\n" + result.getScanRecord();
+                            addItemToScanList(deviceName, dataString, idx); // 리스트의 기존 자리 수정
+                        }
+                    }
+
+                    if (rawData != null) {
+
+
+                        handleScannedData(rawData, deviceAddress, deviceName, rssi, uuid);
+                    }
+                }
+                public void onScanFailed(int errorCode) { //스캔 실패 시
+                    String errorMsg;
+
+                    switch (errorCode) {
+                        case ScanCallback.SCAN_FAILED_ALREADY_STARTED:
+                            errorMsg = "이미 스캔 중";
+                            break;
+                        case ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED:
+                            errorMsg = "앱 등록 실패";
+                            break;
+                        case ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED:
+                            errorMsg = "BLE 기능 미지원";
+                            break;
+                        case ScanCallback.SCAN_FAILED_INTERNAL_ERROR:
+                            errorMsg = "내부 오류";
+                            break;
+                        default:
+                            errorMsg = "알 수 없는 오류";
+                    }
+
+                    Log.e("BLE_SCAN", "스캔 실패: " + errorMsg + " (code=" + errorCode + ")");
+                    logData.add("[BLE_SCAN] 스캔 실패: " + errorMsg + " (code=" + errorCode + ")"); // 로그 뷰 나타내는 부분 추가
+                    logAdapter.notifyDataSetChanged();
+                    logListView.smoothScrollToPosition(logData.size() - 1);
+                }
+
+            };
 
             // Android 11 이하 GPS 체크
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
@@ -274,6 +275,9 @@ public class MainActivity extends AppCompatActivity {
             }
 
             bluetoothLeScanner.stopScan(scanCallback);
+            scanCallback = null;
+
+            deviceList.clear();
 
             logData.add("스캔 중지");
             logAdapter.notifyDataSetChanged();
