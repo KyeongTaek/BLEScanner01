@@ -1,3 +1,4 @@
+
 package com.example.blescanner01;
 
 import android.annotation.SuppressLint;
@@ -8,6 +9,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.location.LocationManager;
+
 
 import android.widget.Button;
 import android.widget.ListView;
@@ -20,9 +22,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+
+import java.io.File;
+import java.util.ArrayList;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;

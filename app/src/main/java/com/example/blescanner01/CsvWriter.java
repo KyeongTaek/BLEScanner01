@@ -31,11 +31,13 @@ public class CsvWriter {
                             .append(csvSafe(data.getUuid())).append(",")
                             .append(String.valueOf(data.getCo2())).append(" ppm,")
                             .append(String.valueOf(data.getTemperature())).append(" °C\n");
+
         }
 
         writer.flush();
         writer.close();
         return file;
+
     }
     private static String csvSafe(String value) {
 
