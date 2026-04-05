@@ -324,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
             historyData.clear();
             historyAdapter.notifyDataSetChanged();
 
-            //테스트용 더미 데이터
+
 
         });
 

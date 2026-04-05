@@ -38,7 +38,7 @@ public class SensorParser {
 
         int humRaw    = littleEndianToUInt16(rawData[2], rawData[3]);
         float humidity = humRaw / 100.0f;
-
+        //1
         int aqi  = rawData[4] & 0xFF;
         int tvoc = littleEndianToUInt16(rawData[5], rawData[6]);
         int eco2 = littleEndianToUInt16(rawData[7], rawData[8]);
