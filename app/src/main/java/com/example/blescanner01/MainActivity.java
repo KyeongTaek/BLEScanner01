@@ -10,6 +10,10 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.location.LocationManager;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 
 import android.widget.Button;
 import android.widget.ListView;
@@ -442,7 +446,7 @@ public class MainActivity extends AppCompatActivity {
                 "온도 : " + data.getTemperature() + "\n" +
                         "습도 : " + data.getHumidity() + "\n" + "AQI : " + data.getAqi() + "\n" +
                         "TVOC : " + data.getTvoc() + "\n" + "eCo2 : " + data.getEco2() + "\n" +
-                        "시간 : " + data.getTime();
+                        "앱시간 : " + data.getTime() + "\n" + "센서시간 : " + data.getSensorTime();
 
         runOnUiThread(() -> {
                 historyData.add(display);

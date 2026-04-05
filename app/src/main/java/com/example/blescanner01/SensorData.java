@@ -2,6 +2,7 @@ package com.example.blescanner01;
 
 public class SensorData {
     private String time;
+    private String sensorTime;
     private String deviceName;
     private String deviceAddress;
 
@@ -14,9 +15,10 @@ public class SensorData {
     private String rawHex;
     private int rssi;
     private String uuid;
-    public SensorData(String time,String deviceAddress, String deviceName,
+    public SensorData(String time,String sensorTime, String deviceAddress, String deviceName,
                       float temperature, float humidity, int aqi, int tvoc, int eco2, String rawHex, int rssi, String uuid) {
         this.time = time;
+        this.sensorTime = sensorTime;
         this.deviceAddress = deviceAddress;
         this.deviceName = deviceName;
 
@@ -31,6 +33,7 @@ public class SensorData {
     }
 
     public String getTime() {return time;}
+    public String getSensorTime() {return sensorTime;}
     public String getDeviceName() {return deviceName;}
     public String getDeviceAddress() {return deviceAddress;}
 

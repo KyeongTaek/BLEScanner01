@@ -20,11 +20,12 @@ public class CsvWriter {
         FileWriter writer = new FileWriter(file, true); // 텍스트 뒤로 이어쓰기 허용
 
         if(isNewFile) {
-            writer.append("timestamp,device_name,device_address,rssi,uuid,temperature,humidity,aqi,tvoc,eco2\n");
+            writer.append("app_timestamp,sensor_timestamp,device_name,device_address,rssi,uuid,temperature,humidity,aqi,tvoc,eco2\n");
         }
         // ppt 형식에 맞게 수정
         for (SensorData data : dataList) {
             writer.append(csvSafe(data.getTime())).append(",")
+                    .append(csvSafe(data.getSensorTime())).append(",")
                             .append(csvSafe(data.getDeviceName())).append(",")
                             .append(csvSafe(data.getDeviceAddress())).append(",")
                             .append(String.valueOf((data.getRssi()))).append(",")
@@ -53,10 +54,11 @@ public class CsvWriter {
 
         FileWriter writer = new FileWriter(file, true);
         if (isNewFile) {
-            writer.append("timestamp,device_name,device_address,rssi,uuid,temperature,humidity,aqi,tvoc,eco2\n");
+            writer.append("app_timestamp,sensor_timestamp, device_name,device_address,rssi,uuid,temperature,humidity,aqi,tvoc,eco2\n");
         }
 
         writer.append(csvSafe(data.getTime())).append(",")
+                .append(csvSafe(data.getSensorTime())).append(",")
                 .append(csvSafe(data.getDeviceName())).append(",")
                 .append(csvSafe(data.getDeviceAddress())).append(",")
                 .append(String.valueOf(data.getRssi())).append(",")
