@@ -325,16 +325,7 @@ public class MainActivity extends AppCompatActivity {
             historyAdapter.notifyDataSetChanged();
 
             //테스트용 더미 데이터
-            byte[] dummyRaw = new byte[] {
-                    (byte)0x12, (byte)0x08,  // temp: 2066 → 20.66°C
-                    (byte)0x94, (byte)0x11,  // humidity: 4500 → 45.00%
-                    (byte)0x55, (byte)0x00,  // aqi: 85
-                    (byte)0x78, (byte)0x00,  // tvoc: 120
-                    (byte)0xE3, (byte)0x07,  // eco2: 2019
-                    (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00  // timestamp
-            };
 
-            handleScannedData(dummyRaw, "AA:BB:CC:DD:EE:FF", "TestDevice", -60, "0000181A-0000-1000-8000-00805F9B34FB");
         });
 
         btnSave.setOnClickListener(v -> {

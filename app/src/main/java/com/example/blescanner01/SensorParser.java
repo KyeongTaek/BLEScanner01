@@ -32,16 +32,16 @@ public class SensorParser {
         String time = getCurrentTime();
         String rawHex = bytesToHex(rawData);
 
-        // 슬라이드 자료 기준: Temp(2) Humidity(2) AQI(2) TVOC(2) eCO2(2) Timestamp(4)
+        // 슬라이드 자료 기준: Temp(2) Humidity(2) AQI(1) TVOC(2) eCO2(2) Timestamp(4)
         int tempRaw   = littleEndianToUInt16(rawData[0], rawData[1]);
         float temperature = tempRaw / 100.0f;
 
         int humRaw    = littleEndianToUInt16(rawData[2], rawData[3]);
         float humidity = humRaw / 100.0f;
 
-        int aqi  = littleEndianToUInt16(rawData[4], rawData[5]);
-        int tvoc = littleEndianToUInt16(rawData[6], rawData[7]);
-        int eco2 = littleEndianToUInt16(rawData[8], rawData[9]);
+        int aqi  = rawData[4] & 0xFF;
+        int tvoc = littleEndianToUInt16(rawData[5], rawData[6]);
+        int eco2 = littleEndianToUInt16(rawData[7], rawData[8]);
 
         return new SensorData(time, deviceAddress, deviceName,
                 temperature, humidity, aqi, tvoc, eco2, rawHex, rssi, uuid);
