@@ -22,18 +22,28 @@ public class SensorParser {
 
     }
     private static int littleEndianToUInt16(byte low, byte high) {return ((high & 0xFF) << 8) | (low & 0xFF);}
-    public static SensorData parse(byte[] rawData, String deviceAddress, String deviceName,
-                                   int rssi, String uuid){
-        if (rawData == null){return null;}
 
-        if (deviceName == null){deviceName = "unknown";}
-        if (uuid == null) {uuid = "unknown";}
+    public static SensorData parse(byte[] rawData, String deviceAddress, String deviceName,
+                                   int rssi, String uuid) {
+        if (rawData == null || rawData.length < 12) { return null; }
+        if (deviceName == null) { deviceName = "unknown"; }
+        if (uuid == null) { uuid = "unknown"; }
 
         String time = getCurrentTime();
         String rawHex = bytesToHex(rawData);
-        int co2 = littleEndianToUInt16(rawData[0], rawData[1]);
-        int tempRaw = littleEndianToUInt16(rawData[2], rawData[3]);
+
+        // 슬라이드 자료 기준: Temp(2) Humidity(2) AQI(2) TVOC(2) eCO2(2) Timestamp(4)
+        int tempRaw   = littleEndianToUInt16(rawData[0], rawData[1]);
         float temperature = tempRaw / 100.0f;
-        return new SensorData(time, deviceAddress, deviceName,co2, temperature, rawHex, rssi, uuid);
+
+        int humRaw    = littleEndianToUInt16(rawData[2], rawData[3]);
+        float humidity = humRaw / 100.0f;
+
+        int aqi  = littleEndianToUInt16(rawData[4], rawData[5]);
+        int tvoc = littleEndianToUInt16(rawData[6], rawData[7]);
+        int eco2 = littleEndianToUInt16(rawData[8], rawData[9]);
+
+        return new SensorData(time, deviceAddress, deviceName,
+                temperature, humidity, aqi, tvoc, eco2, rawHex, rssi, uuid);
     }
 }

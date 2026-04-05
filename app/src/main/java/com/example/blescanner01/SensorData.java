@@ -4,20 +4,27 @@ public class SensorData {
     private String time;
     private String deviceName;
     private String deviceAddress;
-    private int co2;
+
     private float temperature;
+    private float humidity;
+    private int aqi;
+    private int tvoc;
+    private int eco2;
+
     private String rawHex;
     private int rssi;
     private String uuid;
-    public SensorData(String time,String deviceAddress, String deviceName,int co2,
-                      float temperature, String rawHex, int rssi, String uuid) {
+    public SensorData(String time,String deviceAddress, String deviceName,
+                      float temperature, float humidity, int aqi, int tvoc, int eco2, String rawHex, int rssi, String uuid) {
         this.time = time;
         this.deviceAddress = deviceAddress;
         this.deviceName = deviceName;
 
-        this.co2 = co2;
         this.temperature = temperature;
-
+        this.humidity = humidity;
+        this.aqi = aqi;
+        this.tvoc = tvoc;
+        this.eco2 = eco2;
         this.rawHex = rawHex;
         this.rssi = rssi;
         this.uuid = uuid;
@@ -26,8 +33,13 @@ public class SensorData {
     public String getTime() {return time;}
     public String getDeviceName() {return deviceName;}
     public String getDeviceAddress() {return deviceAddress;}
-    public int getCo2() {return co2;}
+
     public float getTemperature() {return temperature;}
+    public float getHumidity(){return humidity;}
+    public int getAqi() {return aqi;}
+    public int getTvoc() {return tvoc;}
+    public int getEco2(){return eco2;}
+
     public String getRawHex() {return rawHex;}
     public int getRssi(){return rssi;}
     public String getUuid(){return uuid;}

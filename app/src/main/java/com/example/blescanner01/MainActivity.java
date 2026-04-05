@@ -13,6 +13,7 @@ import android.location.LocationManager;
 
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.ArrayAdapter;
 import java.util.ArrayList;
 import java.io.File;
@@ -50,23 +51,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.graphics.Insets;
+
 public class MainActivity extends AppCompatActivity {
 
     Button btnScan, btnStop, btnRefresh, btnSave;
 
     ListView logListView;
+    ListView historyListView;
+    ArrayList<String> historyData;
+    ArrayAdapter<String> historyAdapter;
+
     ArrayList<String> logData;
     ArrayAdapter<String> logAdapter;
 
     ListView scanView; // scan 정보 담는 리스트 추가
+
     List<Map<String, String>> scanData; // scan 정보 추가
     SimpleAdapter scanAdapter; // scan 리스트에 넣어주는 어댑터 추가
     List<BluetoothDevice> deviceList = new ArrayList<>(); // 중복 제거하기 위한 디바이스 리스트
 
     private LineChart lineChart; // 차트
-    private LineDataSet co2DataSet; // co2용 데이터셋
-    private LineDataSet tempDataSet; // 온도용 데이터셋
 
+    private LineDataSet tempDataSet;
+    private LineDataSet humDataSet;
+    private LineDataSet aqiDataSet;
+    private LineDataSet tvocDataSet;
+    private LineDataSet eco2DataSet;
     BluetoothAdapter bluetoothAdapter;
     BluetoothLeScanner bluetoothLeScanner;
     ScanCallback scanCallback;
@@ -95,8 +108,14 @@ public class MainActivity extends AppCompatActivity {
         btnRefresh = findViewById(R.id.button3);
         btnSave = findViewById(R.id.button4);
 
+        historyListView = findViewById(R.id.history_list);
+        historyData = new ArrayList<>();
+        historyAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, historyData);
+        historyListView.setAdapter(historyAdapter);
+
 
         scanView = findViewById(R.id.scan_list); // scan 리스트 추가
+
 
         scanData = new ArrayList<>();
         scanAdapter = new SimpleAdapter(
@@ -110,11 +129,18 @@ public class MainActivity extends AppCompatActivity {
 
 
         lineChart = findViewById(R.id.lineChart);
-        co2DataSet = createDataSet("CO2 (ppm)", Color.RED); // co2 데이터셋 생성
-        tempDataSet = createDataSet("Temperature (°C)", Color.BLUE); // 온도 데이터셋 생성
-        tempDataSet.setAxisDependency(YAxis.AxisDependency.RIGHT); // 오른쪽 y축을 온도 축으로 설정
 
-        LineData lineData = new LineData(co2DataSet, tempDataSet); // linedata에 두 데이터셋 추가
+        tempDataSet = createDataSet("Temperature (°C)", Color.BLUE); // 온도 데이터셋 생성
+        humDataSet = createDataSet("Humidity (%)", Color.CYAN);
+        aqiDataSet = createDataSet("AQI", Color.GREEN);
+        tvocDataSet = createDataSet("TVOC", Color.MAGENTA);
+        eco2DataSet = createDataSet("eCO2", Color.RED);
+
+        tempDataSet.setAxisDependency(YAxis.AxisDependency.RIGHT); // 오른쪽 y축을 온도 축으로 설정
+        humDataSet.setAxisDependency(YAxis.AxisDependency.RIGHT);
+
+
+        LineData lineData = new LineData(tempDataSet, humDataSet, aqiDataSet, tvocDataSet, eco2DataSet);
         lineChart.setData(lineData);
 
         lineChart.invalidate(); // 차트 새로고침
@@ -295,6 +321,20 @@ public class MainActivity extends AppCompatActivity {
             logData.clear();
             logData.add("리프레시");
             logAdapter.notifyDataSetChanged();
+            historyData.clear();
+            historyAdapter.notifyDataSetChanged();
+
+            //테스트용 더미 데이터
+            byte[] dummyRaw = new byte[] {
+                    (byte)0x12, (byte)0x08,  // temp: 2066 → 20.66°C
+                    (byte)0x94, (byte)0x11,  // humidity: 4500 → 45.00%
+                    (byte)0x55, (byte)0x00,  // aqi: 85
+                    (byte)0x78, (byte)0x00,  // tvoc: 120
+                    (byte)0xE3, (byte)0x07,  // eco2: 2019
+                    (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00  // timestamp
+            };
+
+            handleScannedData(dummyRaw, "AA:BB:CC:DD:EE:FF", "TestDevice", -60, "0000181A-0000-1000-8000-00805F9B34FB");
         });
 
         btnSave.setOnClickListener(v -> {
@@ -407,10 +447,35 @@ public class MainActivity extends AppCompatActivity {
             logListView.smoothScrollToPosition(logData.size() - 1);
             return;
         }
+        String display =
+                "온도 : " + data.getTemperature() + "\n" +
+                        "습도 : " + data.getHumidity() + "\n" + "AQI : " + data.getAqi() + "\n" +
+                        "TVOC : " + data.getTvoc() + "\n" + "eCo2 : " + data.getEco2() + "\n" +
+                        "시간 : " + data.getTime();
 
-        runOnUiThread(() -> addEntry(data.getCo2(), data.getTemperature())); // main thread(ui) 업데이트 위한 runonuithread
+        runOnUiThread(() -> {
+                historyData.add(display);
+                if (historyData.size() > 10){
+                    historyData.remove(0);
+                }
+                historyAdapter.notifyDataSetChanged();
+                historyListView.smoothScrollToPosition(historyData.size() - 1);
 
+                addEntry( data.getTemperature(), data.getHumidity(), data.getAqi(), data.getTvoc(), data.getEco2());
+                // main thread(ui) 업데이트 위한 runonuithread
+
+                });
         sensorDataList.add(data);
+
+
+        try {
+            CsvWriter.appendRow(this, data);
+
+
+
+        } catch (Exception e){
+            Log.e("CSV", "실시간 저장 실패: " + e);
+        }
     }
     private void addItemToScanList(String title, String desc) { // 리스트에 새로 추가하는 함수
         HashMap<String, String> newItem = new HashMap<>();
@@ -438,17 +503,15 @@ public class MainActivity extends AppCompatActivity {
         return set;
     }
 
-    public void addEntry(int co2Value, float tempValue) { // 실시간 데이터 추가 함수
+    public void addEntry(float temp, float hum, int aqi, int tvoc, int eco2) { // 실시간 데이터 추가 함수
         LineData data = lineChart.getData();
 
         if(data != null) {
-            // 각 데이터셋 가져옴
-            ILineDataSet set0 = data.getDataSetByIndex(0);
-            ILineDataSet set1 = data.getDataSetByIndex(1);
-
-            // 새로운 데이터 추가
-            data.addEntry(new Entry(set0.getEntryCount(), co2Value), 0);
-            data.addEntry(new Entry(set1.getEntryCount(), tempValue), 1);
+            data.addEntry(new Entry(data.getDataSetByIndex(0).getEntryCount(), temp),  0);
+            data.addEntry(new Entry(data.getDataSetByIndex(1).getEntryCount(), hum),   1);
+            data.addEntry(new Entry(data.getDataSetByIndex(2).getEntryCount(), aqi),   2);
+            data.addEntry(new Entry(data.getDataSetByIndex(3).getEntryCount(), tvoc),  3);
+            data.addEntry(new Entry(data.getDataSetByIndex(4).getEntryCount(), eco2),  4);
 
             // 차트에 데이터 변경 알림
             data.notifyDataChanged();
@@ -458,5 +521,8 @@ public class MainActivity extends AppCompatActivity {
             lineChart.setVisibleXRangeMaximum(20);
             lineChart.moveViewToX(data.getEntryCount());
         }
+
     }
+
+
 }

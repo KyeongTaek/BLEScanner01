@@ -63,10 +63,25 @@
         android:textAlignment="center"
         android:textSize="20sp" />
 
+
+
     <ListView
         android:id="@+id/scan_list"
         android:layout_width="match_parent"
         android:layout_height="200dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="수신 이력"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        android:padding="4dp"/>
+
+    <ListView
+        android:id="@+id/history_list"
+        android:layout_width="match_parent"
+        android:layout_height="150dp" />
 
     <!-- line chart용 -->
     <com.github.mikephil.charting.charts.LineChart
