@@ -64,11 +64,10 @@
         android:textSize="20sp" />
 
 
-
     <ListView
         android:id="@+id/scan_list"
         android:layout_width="match_parent"
-        android:layout_height="200dp" />
+        android:layout_height="113dp" />
 
     <TextView
         android:layout_width="match_parent"
@@ -81,13 +80,13 @@
     <ListView
         android:id="@+id/history_list"
         android:layout_width="match_parent"
-        android:layout_height="150dp" />
+        android:layout_height="116dp" />
 
     <!-- line chart용 -->
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/lineChart"
         android:layout_width="match_parent"
-        android:layout_height="300dp" />
+        android:layout_height="161dp" />
 
     <TextView
         android:id="@+id/logList"
@@ -100,7 +99,7 @@
     <ListView
         android:id="@+id/log_list"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="129dp"
         android:visibility="visible" />
 
 </LinearLayout>

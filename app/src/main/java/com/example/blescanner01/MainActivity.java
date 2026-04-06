@@ -80,10 +80,7 @@ public class MainActivity extends AppCompatActivity {
     private LineChart lineChart; // 차트
 
     private LineDataSet tempDataSet;
-    private LineDataSet humDataSet;
-    private LineDataSet aqiDataSet;
     private LineDataSet tvocDataSet;
-    private LineDataSet eco2DataSet;
     BluetoothAdapter bluetoothAdapter;
     BluetoothLeScanner bluetoothLeScanner;
     ScanCallback scanCallback;
@@ -135,16 +132,12 @@ public class MainActivity extends AppCompatActivity {
         lineChart = findViewById(R.id.lineChart);
 
         tempDataSet = createDataSet("Temperature (°C)", Color.BLUE); // 온도 데이터셋 생성
-        humDataSet = createDataSet("Humidity (%)", Color.CYAN);
-        aqiDataSet = createDataSet("AQI", Color.GREEN);
-        tvocDataSet = createDataSet("TVOC", Color.MAGENTA);
-        eco2DataSet = createDataSet("eCO2", Color.RED);
+        tvocDataSet = createDataSet("TVOC", Color.MAGENTA); // tvoc 데이터셋 생성
 
         tempDataSet.setAxisDependency(YAxis.AxisDependency.RIGHT); // 오른쪽 y축을 온도 축으로 설정
-        humDataSet.setAxisDependency(YAxis.AxisDependency.RIGHT);
 
 
-        LineData lineData = new LineData(tempDataSet, humDataSet, aqiDataSet, tvocDataSet, eco2DataSet);
+        LineData lineData = new LineData(tempDataSet, tvocDataSet);
         lineChart.setData(lineData);
 
         lineChart.invalidate(); // 차트 새로고침
@@ -456,7 +449,7 @@ public class MainActivity extends AppCompatActivity {
                 historyAdapter.notifyDataSetChanged();
                 historyListView.smoothScrollToPosition(historyData.size() - 1);
 
-                addEntry( data.getTemperature(), data.getHumidity(), data.getAqi(), data.getTvoc(), data.getEco2());
+                addEntry( data.getTemperature(), data.getTvoc());
                 // main thread(ui) 업데이트 위한 runonuithread
 
                 });
@@ -498,15 +491,12 @@ public class MainActivity extends AppCompatActivity {
         return set;
     }
 
-    public void addEntry(float temp, float hum, int aqi, int tvoc, int eco2) { // 실시간 데이터 추가 함수
+    public void addEntry(float temp, int tvoc) { // 실시간 데이터 추가 함수
         LineData data = lineChart.getData();
 
         if(data != null) {
             data.addEntry(new Entry(data.getDataSetByIndex(0).getEntryCount(), temp),  0);
-            data.addEntry(new Entry(data.getDataSetByIndex(1).getEntryCount(), hum),   1);
-            data.addEntry(new Entry(data.getDataSetByIndex(2).getEntryCount(), aqi),   2);
-            data.addEntry(new Entry(data.getDataSetByIndex(3).getEntryCount(), tvoc),  3);
-            data.addEntry(new Entry(data.getDataSetByIndex(4).getEntryCount(), eco2),  4);
+            data.addEntry(new Entry(data.getDataSetByIndex(1).getEntryCount(), tvoc),  1);
 
             // 차트에 데이터 변경 알림
             data.notifyDataChanged();
