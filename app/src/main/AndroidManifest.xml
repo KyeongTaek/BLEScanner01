@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!-- 인터넷 권한 추가 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -22,7 +24,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.BLEScanner01" >
+        android:theme="@style/Theme.BLEScanner01"
+        android:usesCleartextTraffic="true" > <!-- api28 이상부터, https가 아닌 http에 접속하기 위해 허용해야하는 권한 -->
         <activity
             android:name=".MainActivity"
             android:exported="true" >
