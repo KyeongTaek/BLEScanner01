@@ -45,7 +45,7 @@ public class NetworkModule {
         HttpLoggingInterceptor.Logger customLogger = new HttpLoggingInterceptor.Logger() {
             @Override
             public void log(String message) { // 로그로 출력하도록 설정
-                Log.d("httpLog :", message);
+                Log.d("team5httpLog :", message);
             }
         };
 
