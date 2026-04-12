@@ -95,6 +95,25 @@ public class NetworkModule {
 
         return false;
     }
+
+    //sensordata 데이터를 서버로 전송하기 위한 DataRequest 변환 함수
+    public static DataRequest fromSensorData(SensorData data, String deviceId){
+        return new DataRequest(
+                "opensrc2026",
+                "팀명",
+                data.getDeviceName(),
+                data.getDeviceAddress(),
+                data.getTemperature(),
+                data.getHumidity(),
+                data.getAqi(),
+                data.getTvoc(),
+                data.getEco2(),
+                data.getUnixTimestamp(),
+                0.0,
+                0.0,
+                deviceId
+        );
+    }
 }
 
 class DataRequest{

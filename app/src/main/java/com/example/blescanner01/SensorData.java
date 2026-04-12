@@ -12,13 +12,18 @@ public class SensorData {
     private int tvoc;
     private int eco2;
 
+
     private String rawHex;
     private int rssi;
     private String uuid;
-    public SensorData(String time,String sensorTime, String deviceAddress, String deviceName,
+    //숫자 형식 시간을 받는 변수 추가
+    private long unixTimestamp;
+    //sensordata에 unixtimestamp 추가
+    public SensorData(String time,String sensorTime,long unixTimestamp, String deviceAddress, String deviceName,
                       float temperature, float humidity, int aqi, int tvoc, int eco2, String rawHex, int rssi, String uuid) {
         this.time = time;
         this.sensorTime = sensorTime;
+        this.unixTimestamp = unixTimestamp;
         this.deviceAddress = deviceAddress;
         this.deviceName = deviceName;
 
@@ -34,6 +39,8 @@ public class SensorData {
 
     public String getTime() {return time;}
     public String getSensorTime() {return sensorTime;}
+
+    public long getUnixTimestamp() { return unixTimestamp;}
     public String getDeviceName() {return deviceName;}
     public String getDeviceAddress() {return deviceAddress;}
 

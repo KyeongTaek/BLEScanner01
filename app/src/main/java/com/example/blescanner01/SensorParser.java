@@ -65,7 +65,7 @@ public class SensorParser {
         // 순서 5. 이산화탄소 (eCO2): ushort (2B), 규칙: & 0xFFFF
         int eco2 = littleEndianToUInt16(rawData[7], rawData[8]);
 
-        return new SensorData(apptime, sensorTime, deviceAddress, deviceName,
+        return new SensorData(apptime, sensorTime,unixTime, deviceAddress, deviceName,
                 temperature, humidity, aqi, tvoc, eco2, rawHex, rssi, uuid);
     }
 }
