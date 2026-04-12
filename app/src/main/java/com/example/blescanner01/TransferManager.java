@@ -44,6 +44,37 @@ public class TransferManager {
             public void onResponse(Call<DataResponse> call, Response<DataResponse> response) {
                 //역할 D 담당
                 //응답 코드별 처리(성공, 실패 분기 / 다이얼로그 표시)
+                if (response.isSuccessful() && response.body() != null) {
+                    DataResponse dataResponse = response.body();
+                    if ("Success".equals(dataResponse.getResult())) {
+                        NetworkModule.showStatusDialog(
+                                context,
+                                "전송 완료",
+                                dataResponse.getMessage()
+                        );
+                    }
+                    else {
+                        NetworkModule.showStatusDialog(
+                                context,
+                                "서버 실패",
+                                dataResponse.getMessage()
+                        );
+                    }
+                }
+                else {
+                    String errorMsg = "";
+                    switch (response.code()) {
+                        case 400: errorMsg = "잘못된 요청 (데이터 형식을 확인하세요)"; break;
+                        case 404: errorMsg = "서버 경로를 찾을 수 없습니다 (404)"; break;
+                        case 500: errorMsg = "서버 내부 오류 발생 (500)"; break;
+                        default: errorMsg = "통신 에러 (Code: " + response.code() + ")"; break;
+                    }
+                    NetworkModule.showStatusDialog(
+                            context,
+                            "에러",
+                            errorMsg
+                    );
+                }
             }
 
             //서버와 통신 자체가 실패했을 때 실행함
