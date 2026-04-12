@@ -33,6 +33,7 @@ public class TransferManager {
             return;
         }
 
+
         Call<DataResponse> call = apiService.sendSensorData(data);
 
         // enqueue()를 이용한 비동기 통신 시작
@@ -93,7 +94,10 @@ public class TransferManager {
             }
         });
     }
+
 }
+
+
 
 
 // ApiService, DataRequest, DataRespoonse, NetworkModule.getRetrofit(), NetworkModule.isNetworkAvailable() 등은 별도의 파일에서 정의되어야 함.

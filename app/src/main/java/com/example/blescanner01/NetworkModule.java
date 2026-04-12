@@ -97,7 +97,7 @@ public class NetworkModule {
     }
 
     //sensordata 데이터를 서버로 전송하기 위한 DataRequest 변환 함수
-    public static DataRequest fromSensorData(SensorData data, String deviceId){
+    public static DataRequest fromSensorData(SensorData data, String deviceId,double lat, double lon ){
         return new DataRequest(
                 "opensrc2026",
                 "팀명",
@@ -109,8 +109,8 @@ public class NetworkModule {
                 data.getTvoc(),
                 data.getEco2(),
                 data.getUnixTimestamp(),
-                0.0,
-                0.0,
+               lon,
+                lat,
                 deviceId
         );
     }
