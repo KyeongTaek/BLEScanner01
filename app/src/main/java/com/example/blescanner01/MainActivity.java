@@ -92,6 +92,8 @@ public class MainActivity extends AppCompatActivity {
 
     private final ArrayList<SensorData> sensorDataList = new ArrayList<>();
 
+    private TransferManager transferManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        transferManager = new TransferManager(this);
 
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
@@ -150,25 +154,26 @@ public class MainActivity extends AppCompatActivity {
         logListView.setAdapter(logAdapter);
 
 
-        // http 통신 임시 테스트 데이터
-        ApiService apiService = NetworkModule.getRetrofit().create(ApiService.class);
+        // // http 통신 임시 테스트 데이터
+        // ApiService apiService = NetworkModule.getRetrofit().create(ApiService.class);
 
-        DataRequest dummyData = new DataRequest(
-                "opensrc2026", "team 5", "sensor5", "AA:BB:CC:DD:EE:FF",
-                11.0, 22.0, 33, 44, 55, 66L, 7.7, 8.8, "abcd-1234"
-        );
+        // DataRequest dummyData = new DataRequest(
+        //         "opensrc2026", "team 5", "sensor5", "AA:BB:CC:DD:EE:FF",
+        //         11.0, 22.0, 33, 44, 55, 66L, 7.7, 8.8, "abcd-1234"
+        // );
 
-        apiService.sendSensorData(dummyData).enqueue(new retrofit2.Callback<DataResponse>() {
-            @Override
-            public void onResponse(retrofit2.Call<DataResponse> call, retrofit2.Response<DataResponse> response) {
-                Log.e("TEST", "결과: " + response.body().getResult());
-                Log.e("TEST", "메시지: " + response.body().getMessage());
-            }
-            @Override
-            public void onFailure(retrofit2.Call<DataResponse> call, Throwable t) {
-                Log.e("TEST", "실패: " + t.getMessage());
-            }
-        });
+        // apiService.sendSensorData(dummyData).enqueue(new retrofit2.Callback<DataResponse>() {
+        //     @Override
+        //     public void onResponse(retrofit2.Call<DataResponse> call, retrofit2.Response<DataResponse> response) {
+        //         Log.e("TEST", "결과: " + response.body().getResult());
+        //         Log.e("TEST", "메시지: " + response.body().getMessage());
+        //     }
+        //     @Override
+        //     public void onFailure(retrofit2.Call<DataResponse> call, Throwable t) {
+        //         Log.e("TEST", "실패: " + t.getMessage());
+        //     }
+        // });
+
 
 
         btnScan.setOnClickListener(v -> {
@@ -475,6 +480,9 @@ public class MainActivity extends AppCompatActivity {
 
                 });
         sensorDataList.add(data);
+
+        DataRequest request = NetworkModule.fromSensorData(data, deviceAddress);
+        transferManager.executeDataTransfer(request);
 
 
         try {
