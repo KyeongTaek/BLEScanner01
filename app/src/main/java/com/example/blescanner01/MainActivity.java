@@ -22,6 +22,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -77,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE = 100;
 
     private final ArrayList<SensorData> sensorDataList = new ArrayList<>();
+
+    private ResponseHandler responseHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -297,8 +302,24 @@ public class MainActivity extends AppCompatActivity {
             logAdapter.notifyDataSetChanged();
         });
 
+        responseHandler = new ResponseHandler(this);
+
+
         btnSave.setOnClickListener(v -> {
+            // 1. 네트워크 상태 먼저 체크 (담당 D의 핵심 역할)
+            if (!responseHandler.isNetworkAvailable()) {
+                logData.add("[D] 네트워크 연결 안됨 - 전송 취소");
+                logAdapter.notifyDataSetChanged();
+                Toast.makeText(this, "네트워크를 연결해주세요.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // 2. CSV 저장 (기존 기능 유지)
             saveSensorDataToCsv();
+
+            // 3. 서버 전송 로직 (계획서 3번 executeDataTransfer 단계)
+            // 실제 구현 시에는 담당 C가 만든 전송 메서드를 호출
+            sendDataToServer();
         });
 
         checkPermission();
@@ -308,6 +329,9 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+
+
     }
 
     public void saveSensorDataToCsv() {  // 로그 뷰에 나타나게 하는 부분 추가
