@@ -3,7 +3,9 @@ package com.example.blescanner01;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -61,6 +63,7 @@ import androidx.core.graphics.Insets;
 
 public class MainActivity extends AppCompatActivity {
 
+    LocationManager locationManager;
     Button btnScan, btnStop, btnRefresh, btnSave;
 
     ListView logListView;
@@ -362,6 +365,8 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
     }
 
     public void saveSensorDataToCsv() {  // 로그 뷰에 나타나게 하는 부분 추가
@@ -481,7 +486,27 @@ public class MainActivity extends AppCompatActivity {
                 });
         sensorDataList.add(data);
 
-        DataRequest request = NetworkModule.fromSensorData(data, deviceAddress);
+        double lat = 36.6287; // 기본값 (충북대)
+        double lon = 127.4606;
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // GPS 센서로부터 위치 시도
+            android.location.Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+            if (location == null) {
+                // GPS가 안 잡히면 네트워크 기반 위치 시도
+                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            }
+
+            if (location != null) {
+                lat = location.getLatitude();
+                lon = location.getLongitude();
+                Log.d("GPS_ROLE", "실시간 위치 주입: " + lat + ", " + lon);
+            }
+        }
+
+
+        DataRequest request = NetworkModule.fromSensorData(data, deviceAddress, lat, lon);
         transferManager.executeDataTransfer(request);
 
 
@@ -536,6 +561,28 @@ public class MainActivity extends AppCompatActivity {
             lineChart.moveViewToX(data.getEntryCount());
         }
 
+
+    }
+    @SuppressLint("MissingPermission")
+    private double[] getCurrentLocation() {
+        double lat = 36.6287; // 기본값 (충북대)
+        double lon = 127.4606;
+
+        if (locationManager != null) {
+            // 1. GPS 센서 우선 시도
+            Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (loc == null) {
+                // 2. GPS 안되면 네트워크(와이파이/기지국) 시도
+                loc = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            }
+
+            if (loc != null) {
+                lat = loc.getLatitude();
+                lon = loc.getLongitude();
+                Log.d("GPS_ROLE", "실시간 위치 획득 성공: " + lat + ", " + lon);
+            }
+        }
+        return new double[]{lat, lon};
     }
 
 
