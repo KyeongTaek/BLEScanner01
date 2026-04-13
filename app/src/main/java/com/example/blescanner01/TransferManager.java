@@ -33,10 +33,10 @@ public class TransferManager {
             return;
         }
 
+        // data를 POST로 서버에 전송하고 응답은 DataResponse 형태로 받을 것이라 명시.
+        Call<DataResponse> call = apiService.sendSensorData(data); // 통신 시작, 상태 관리 등을 할 수 있는 Call<DataResponse> 객체를 call에 담음.
 
-        Call<DataResponse> call = apiService.sendSensorData(data);
-
-        // enqueue()를 이용한 비동기 통신 시작
+        // enqueue()를 이용한 비동기 통신 시작(한 번만 보냄!)
         // 앱 화면을 멈추지 않고 서버 요청을 백그라운드에서 처리
         call.enqueue(new Callback<DataResponse>() {
 
@@ -45,9 +45,9 @@ public class TransferManager {
             public void onResponse(Call<DataResponse> call, Response<DataResponse> response) {
                 //역할 D 담당
                 //응답 코드별 처리(성공, 실패 분기 / 다이얼로그 표시)
-                if (response.isSuccessful() && response.body() != null) {
+                if (response.isSuccessful() && response.body() != null) { // 응답코드가 200~300 사이이고(성공) 응답내용이 비어있지 않다면
                     DataResponse dataResponse = response.body();
-                    if ("Success".equals(dataResponse.getResult())) {
+                    if ("Success".equals(dataResponse.getResult())) { // result가 success라면
                         NetworkModule.showStatusDialog(
                                 context,
                                 "전송 완료",
@@ -57,14 +57,14 @@ public class TransferManager {
                     else {
                         NetworkModule.showStatusDialog(
                                 context,
-                                "서버 실패",
+                                dataResponse.getResult(),
                                 dataResponse.getMessage()
                         );
                     }
                 }
-                else {
+                else { // 성공하지 못한 경우
                     String errorMsg = "";
-                    switch (response.code()) {
+                    switch (response.code()) { // 응답코드에 따라
                         case 400: errorMsg = "잘못된 요청 (데이터 형식을 확인하세요)"; break;
                         case 404: errorMsg = "서버 경로를 찾을 수 없습니다 (404)"; break;
                         case 500: errorMsg = "서버 내부 오류 발생 (500)"; break;

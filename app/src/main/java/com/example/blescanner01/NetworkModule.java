@@ -100,7 +100,7 @@ public class NetworkModule {
     public static DataRequest fromSensorData(SensorData data, String deviceId,double lat, double lon ){
         return new DataRequest(
                 "opensrc2026",
-                "팀명",
+                "team 5",
                 data.getDeviceName(),
                 data.getDeviceAddress(),
                 data.getTemperature(),
@@ -109,14 +109,14 @@ public class NetworkModule {
                 data.getTvoc(),
                 data.getEco2(),
                 data.getUnixTimestamp(),
-               lon,
                 lat,
+                lon,
                 deviceId
         );
     }
 }
 
-class DataRequest{
+class DataRequest{ // SerializedName: 필드명과 json 키가 다른 경우에 직렬화(데이터 -> json) / 역직렬화(json -> 데이터) 시 필드와 키를 매핑해주는 역할
     @SerializedName("key")       private String key;
     @SerializedName("team")      private String team;
     @SerializedName("sensor")    private String sensor;
@@ -154,7 +154,7 @@ class DataResponse{
         @SerializedName("sensor") private String sensor;
     }
 }
-interface ApiService{
+interface ApiService{ // 엔드포인트에 POST로 DataRequest를 보낼 것임을 명시
     @POST("sensor/opensrc/test/")
     Call<DataResponse> sendSensorData(@Body DataRequest data);
 }

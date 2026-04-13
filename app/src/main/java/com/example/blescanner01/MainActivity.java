@@ -17,6 +17,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 
+import android.provider.Settings;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -427,6 +428,21 @@ public class MainActivity extends AppCompatActivity {
                 );
             }
         }
+
+        // 네트워크 권한 요청 추가
+        int internetPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET);
+        int networkPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE);
+        if (internetPermission != PackageManager.PERMISSION_GRANTED ||
+        networkPermission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{
+                            Manifest.permission.INTERNET,
+                            Manifest.permission.ACCESS_NETWORK_STATE
+                    },
+                    REQUEST_CODE
+            );
+        }
     }
 
     @Override
@@ -468,8 +484,8 @@ public class MainActivity extends AppCompatActivity {
         }
         String display =
                 "온도 : " + data.getTemperature() + "\n" +
-                        "습도 : " + data.getHumidity() + "\n" + "AQI : " + data.getAqi() + "\n" +
-                        "TVOC : " + data.getTvoc() + "\n" + "eCo2 : " + data.getEco2() + "\n" +
+                        "습도 : " + data.getHumidity() + ", " + "AQI : " + data.getAqi() + "\n" +
+                        "TVOC : " + data.getTvoc() + ", " + "eCo2 : " + data.getEco2() + "\n" +
                         "앱시간 : " + data.getTime() + "\n" + "센서시간 : " + data.getSensorTime();
 
         runOnUiThread(() -> {
@@ -490,23 +506,24 @@ public class MainActivity extends AppCompatActivity {
         double lon = 127.4606;
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // GPS 센서로부터 위치 시도
+            // GPS 센서로부터 위치 측위 시도
             android.location.Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
             if (location == null) {
-                // GPS가 안 잡히면 네트워크 기반 위치 시도
+                // GPS가 안 잡히면 네트워크(와이파이/기지국) 기반 위치 측위 시도
                 location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
             }
 
             if (location != null) {
                 lat = location.getLatitude();
                 lon = location.getLongitude();
-                Log.d("GPS_ROLE", "실시간 위치 주입: " + lat + ", " + lon);
+                Log.d("GPS_ROLE", "실시간 위치 획득 성공: " + lat + ", " + lon);
             }
         }
 
 
-        DataRequest request = NetworkModule.fromSensorData(data, deviceAddress, lat, lon);
+        String deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+        DataRequest request = NetworkModule.fromSensorData(data, deviceId, lat, lon);
         transferManager.executeDataTransfer(request);
 
 
@@ -563,27 +580,4 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-    @SuppressLint("MissingPermission")
-    private double[] getCurrentLocation() {
-        double lat = 36.6287; // 기본값 (충북대)
-        double lon = 127.4606;
-
-        if (locationManager != null) {
-            // 1. GPS 센서 우선 시도
-            Location loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (loc == null) {
-                // 2. GPS 안되면 네트워크(와이파이/기지국) 시도
-                loc = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            }
-
-            if (loc != null) {
-                lat = loc.getLatitude();
-                lon = loc.getLongitude();
-                Log.d("GPS_ROLE", "실시간 위치 획득 성공: " + lat + ", " + lon);
-            }
-        }
-        return new double[]{lat, lon};
-    }
-
-
 }
