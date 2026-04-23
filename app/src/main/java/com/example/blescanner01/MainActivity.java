@@ -72,8 +72,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> historyData;
     ArrayAdapter<String> historyAdapter;
 
-    ArrayList<String> logData;
-    ArrayAdapter<String> logAdapter;
+    static ArrayList<String> logData;
+    static ArrayAdapter<String> logAdapter;
 
     ListView scanView; // scan 정보 담는 리스트 추가
 

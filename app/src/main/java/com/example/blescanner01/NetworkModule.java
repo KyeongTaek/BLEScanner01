@@ -111,7 +111,8 @@ public class NetworkModule {
                 data.getUnixTimestamp(),
                 lat,
                 lon,
-                deviceId
+                deviceId,
+                data.getRssi()
         );
     }
 }
@@ -130,14 +131,16 @@ class DataRequest{ // SerializedName: 필드명과 json 키가 다른 경우에 
     @SerializedName("lat")       private double lat;
     @SerializedName("lon")       private double lon;
     @SerializedName("sender")    private String sender;
+    @SerializedName("rssi")      private int rssi;
+
 
     public DataRequest(String key, String team, String sensor, String mac,
                        double temp, double humidity, int aqi, int tvoc, int eco2,
-                       long timestamp, double lat, double lon, String sender) {
+                       long timestamp, double lat, double lon, String sender, int rssi) {
         this.key = key; this.team = team; this.sensor = sensor; this.mac = mac;
         this.temp = temp; this.humidity = humidity; this.aqi = aqi;
         this.tvoc = tvoc; this.eco2 = eco2; this.timestamp = timestamp;
-        this.lat = lat; this.lon = lon; this.sender = sender;
+        this.lat = lat; this.lon = lon; this.sender = sender; this.rssi = rssi;
     }
 }
 
@@ -155,6 +158,6 @@ class DataResponse{
     }
 }
 interface ApiService{ // 엔드포인트에 POST로 DataRequest를 보낼 것임을 명시
-    @POST("sensor/opensrc/test/")
+    @POST("sensor/opensrc/upload/")
     Call<DataResponse> sendSensorData(@Body DataRequest data);
 }

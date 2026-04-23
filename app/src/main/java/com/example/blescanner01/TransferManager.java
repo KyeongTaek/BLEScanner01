@@ -48,18 +48,24 @@ public class TransferManager {
                 if (response.isSuccessful() && response.body() != null) { // 응답코드가 200~300 사이이고(성공) 응답내용이 비어있지 않다면
                     DataResponse dataResponse = response.body();
                     if ("Success".equals(dataResponse.getResult())) { // result가 success라면
-                        NetworkModule.showStatusDialog(
-                                context,
-                                "전송 완료",
-                                dataResponse.getMessage()
-                        );
+                        MainActivity.logData.add("[전송 완료]\n" + dataResponse.getMessage());
+                        MainActivity.logAdapter.notifyDataSetChanged();
+
+//                        NetworkModule.showStatusDialog(
+//                                context,
+//                                "전송 완료",
+//                                dataResponse.getMessage()
+//                        );
                     }
                     else {
-                        NetworkModule.showStatusDialog(
-                                context,
-                                dataResponse.getResult(),
-                                dataResponse.getMessage()
-                        );
+                        MainActivity.logData.add(dataResponse.getResult() + "\n" + dataResponse.getMessage());
+                        MainActivity.logAdapter.notifyDataSetChanged();
+
+//                        NetworkModule.showStatusDialog(
+//                                context,
+//                                dataResponse.getResult(),
+//                                dataResponse.getMessage()
+//                        );
                     }
                 }
                 else { // 성공하지 못한 경우
@@ -70,11 +76,14 @@ public class TransferManager {
                         case 500: errorMsg = "서버 내부 오류 발생 (500)"; break;
                         default: errorMsg = "통신 에러 (Code: " + response.code() + ")"; break;
                     }
-                    NetworkModule.showStatusDialog(
-                            context,
-                            "에러",
-                            errorMsg
-                    );
+
+                    MainActivity.logData.add("[에러]\n" + errorMsg);
+                    MainActivity.logAdapter.notifyDataSetChanged();
+//                    NetworkModule.showStatusDialog(
+//                            context,
+//                            "에러",
+//                            errorMsg
+//                    );
                 }
             }
 
@@ -86,11 +95,13 @@ public class TransferManager {
                 Log.e(TAG, "요청 실패", t);
 
                 //사용자 내용 다이얼로그
-                NetworkModule.showStatusDialog(
-                        context,
-                        "통신 오류",
-                        "요청 실패: " + t.getMessage()
-                );
+                MainActivity.logData.add("[통신 오류]\n요청 실패: " + t.getMessage());
+                MainActivity.logAdapter.notifyDataSetChanged();
+//                NetworkModule.showStatusDialog(
+//                        context,
+//                        "통신 오류",
+//                        "요청 실패: " + t.getMessage()
+//                );
             }
         });
     }
