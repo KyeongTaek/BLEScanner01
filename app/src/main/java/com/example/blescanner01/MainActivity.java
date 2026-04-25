@@ -53,6 +53,7 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     List<Map<String, String>> scanData; // scan 정보 추가
     SimpleAdapter scanAdapter; // scan 리스트에 넣어주는 어댑터 추가
     List<BluetoothDevice> deviceList = new ArrayList<>(); // 중복 제거하기 위한 디바이스 리스트
+    List<String> macList = new ArrayList<>(); // 디바이스를 필터링하기 위한 mac 주소 리스트
 
     private LineChart lineChart; // 차트
 
@@ -135,6 +137,14 @@ public class MainActivity extends AppCompatActivity {
                 new int[] {android.R.id.text1, android.R.id.text2}
         );
         scanView.setAdapter(scanAdapter);
+
+
+        macList.add("D8:3A:DD:79:8E:BF"); // 센서 1 mac 주소 추가
+        macList.add("B8:27:EB:D3:40:06"); // 센서 2 mac 주소 추가
+        macList.add("88:A2:9E:9B:5E:6A"); // 센서 3 mac 주소 추가
+        macList.add("D8:3A:DD:79:8F:80"); // 센서 4 mac 주소 추가
+        macList.add("D8:3A:DD:C1:88:BD"); // 센서 5 mac 주소 추구ㅏ
+
 
 
         lineChart = findViewById(R.id.lineChart);
@@ -226,12 +236,12 @@ public class MainActivity extends AppCompatActivity {
                     String dataString = null;
                     if(deviceName != null && rawData != null) {
                         if(!isDuplicate) { // 리스트에 해당 장치가 들어온 적 없으면
-                            dataString = "MAC: " + deviceAddress + "\nRSSI: " + rssi + "\n" + result.getScanRecord();
+                            dataString = "MAC: " + deviceAddress + "\nRSSI: " + rssi + "\nRAW: " + Arrays.toString(rawData); // scanrecord 전체 대신 rawdata만 표시함
                             deviceList.add(device); // 리스트에 새로 추가
                             addItemToScanList(deviceName, dataString);
                         }
                         else { // 리스트에 해당 장치가 들어온 적 있으면
-                            dataString = "MAC: " + deviceAddress + "\nRSSI: " + rssi + "\n" + result.getScanRecord();
+                            dataString = "MAC: " + deviceAddress + "\nRSSI: " + rssi + "\nRAW: " + Arrays.toString(rawData); // scanrecord 전체 대신 rawdata만 표시함
                             addItemToScanList(deviceName, dataString, idx); // 리스트의 기존 자리 수정
                         }
                     }
@@ -300,12 +310,19 @@ public class MainActivity extends AppCompatActivity {
             // UUID 필터 설정
             UUID serviceUUID = UUID.fromString("0000181A-0000-1000-8000-00805F9B34FB");
 
-            ScanFilter filter = new ScanFilter.Builder()
-                    .setServiceUuid(new ParcelUuid(serviceUUID))
+            ScanFilter uuid_filter = new ScanFilter.Builder()
+                    .setServiceUuid(new ParcelUuid(serviceUUID)) // uuid로 필터링
                     .build();
 
             List<ScanFilter> filters = new ArrayList<>();
-            filters.add(filter);
+            filters.add(uuid_filter);
+
+            for (String address : macList) { // mac 주소로 필터링
+                ScanFilter filter = new ScanFilter.Builder()
+                        .setDeviceAddress(address)
+                        .build();
+                filters.add(filter);
+            }
 
             ScanSettings settings = new ScanSettings.Builder()
                     .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
