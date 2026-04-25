@@ -178,6 +178,8 @@ public class MainActivity extends AppCompatActivity {
                     int rssi = result.getRssi(); //신호세기
                     String uuid = "0000181A-0000-1000-8000-00805F9B34FB";
 
+                    if(!macList.contains(deviceAddress)) return;
+
                     // Raw 데이터 추출
                     byte[] rawData = null;
                     if (result.getScanRecord() != null) {
@@ -268,16 +270,17 @@ public class MainActivity extends AppCompatActivity {
             // UUID 필터 설정
             UUID serviceUUID = UUID.fromString("0000181A-0000-1000-8000-00805F9B34FB");
 
-            ScanFilter uuid_filter = new ScanFilter.Builder()
-                    .setServiceUuid(new ParcelUuid(serviceUUID)) // uuid로 필터링
-                    .build();
+//            ScanFilter uuid_filter = new ScanFilter.Builder()
+//                    .setServiceUuid(new ParcelUuid(serviceUUID)) // uuid로 필터링
+//                    .build();
 
             List<ScanFilter> filters = new ArrayList<>();
-            filters.add(uuid_filter);
+//            filters.add(uuid_filter);
 
             for (String address : macList) { // mac 주소로 필터링
                 ScanFilter filter = new ScanFilter.Builder()
                         .setDeviceAddress(address)
+                        .setServiceUuid(new ParcelUuid(serviceUUID)) // uuid로 필터링
                         .build();
                 filters.add(filter);
             }
