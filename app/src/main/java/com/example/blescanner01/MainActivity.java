@@ -73,8 +73,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> historyData;
     ArrayAdapter<String> historyAdapter;
 
-    static ArrayList<String> logData;
-    static ArrayAdapter<String> logAdapter;
+    static ArrayList<String> logData; // 다른 파일에서 로그 남길 수 있도록, static으로 설정
+    static ArrayAdapter<String> logAdapter; // 다른 파일에서 로그 남길 수 있도록, static으로 설정
 
     ListView scanView; // scan 정보 담는 리스트 추가
 
@@ -104,7 +104,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
@@ -124,10 +123,7 @@ public class MainActivity extends AppCompatActivity {
         historyAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, historyData);
         historyListView.setAdapter(historyAdapter);
 
-
         scanView = findViewById(R.id.scan_list); // scan 리스트 추가
-
-
         scanData = new ArrayList<>();
         scanAdapter = new SimpleAdapter(
                 this,
@@ -138,57 +134,25 @@ public class MainActivity extends AppCompatActivity {
         );
         scanView.setAdapter(scanAdapter);
 
-
         macList.add("D8:3A:DD:79:8E:BF"); // 센서 1 mac 주소 추가
         macList.add("B8:27:EB:D3:40:06"); // 센서 2 mac 주소 추가
         macList.add("88:A2:9E:9B:5E:6A"); // 센서 3 mac 주소 추가
         macList.add("D8:3A:DD:79:8F:80"); // 센서 4 mac 주소 추가
-        macList.add("D8:3A:DD:C1:88:BD"); // 센서 5 mac 주소 추구ㅏ
-
-
+        macList.add("D8:3A:DD:C1:88:BD"); // 센서 5 mac 주소 추가
 
         lineChart = findViewById(R.id.lineChart);
-
         tempDataSet = createDataSet("Temperature (°C)", Color.BLUE); // 온도 데이터셋 생성
         tvocDataSet = createDataSet("TVOC", Color.MAGENTA); // tvoc 데이터셋 생성
-
         tempDataSet.setAxisDependency(YAxis.AxisDependency.RIGHT); // 오른쪽 y축을 온도 축으로 설정
-
 
         LineData lineData = new LineData(tempDataSet, tvocDataSet);
         lineChart.setData(lineData);
-
         lineChart.invalidate(); // 차트 새로고침
 
-
         logListView = findViewById(R.id.log_list);
-
         logData = new ArrayList<>();
         logAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, logData);
         logListView.setAdapter(logAdapter);
-
-
-        // // http 통신 임시 테스트 데이터
-        // ApiService apiService = NetworkModule.getRetrofit().create(ApiService.class);
-
-        // DataRequest dummyData = new DataRequest(
-        //         "opensrc2026", "team 5", "sensor5", "AA:BB:CC:DD:EE:FF",
-        //         11.0, 22.0, 33, 44, 55, 66L, 7.7, 8.8, "abcd-1234"
-        // );
-
-        // apiService.sendSensorData(dummyData).enqueue(new retrofit2.Callback<DataResponse>() {
-        //     @Override
-        //     public void onResponse(retrofit2.Call<DataResponse> call, retrofit2.Response<DataResponse> response) {
-        //         Log.e("TEST", "결과: " + response.body().getResult());
-        //         Log.e("TEST", "메시지: " + response.body().getMessage());
-        //     }
-        //     @Override
-        //     public void onFailure(retrofit2.Call<DataResponse> call, Throwable t) {
-        //         Log.e("TEST", "실패: " + t.getMessage());
-        //     }
-        // });
-
-
 
         btnScan.setOnClickListener(v -> {
             btnScan.setEnabled(false); // 스캔 버튼 누르지 않게
@@ -206,7 +170,6 @@ public class MainActivity extends AppCompatActivity {
                 @SuppressLint("MissingPermission")
                 @Override //스캔 결과 처리
                 public void onScanResult(int callbackType, ScanResult result) {
-
                     BluetoothDevice device = result.getDevice();
                     String deviceName = device.getName();
                     if (deviceName == null) deviceName = "이름 없음";
@@ -214,8 +177,6 @@ public class MainActivity extends AppCompatActivity {
                     String deviceAddress = device.getAddress(); //MAC주소 받아오는부분
                     int rssi = result.getRssi(); //신호세기
                     String uuid = "0000181A-0000-1000-8000-00805F9B34FB";
-
-
 
                     // Raw 데이터 추출
                     byte[] rawData = null;
@@ -247,8 +208,6 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     if (rawData != null) {
-
-
                         handleScannedData(rawData, deviceAddress, deviceName, rssi, uuid);
                     }
                 }
@@ -277,7 +236,6 @@ public class MainActivity extends AppCompatActivity {
                     logAdapter.notifyDataSetChanged();
                     logListView.smoothScrollToPosition(logData.size() - 1);
                 }
-
             };
 
             // Android 11 이하 GPS 체크
@@ -325,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             ScanSettings settings = new ScanSettings.Builder()
-                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY) // 패킷 수신율을 극대화하는, 저지연 스캔 모드 설정
                     .build();
 
             // 스캔 시작
@@ -367,9 +325,6 @@ public class MainActivity extends AppCompatActivity {
             logAdapter.notifyDataSetChanged();
             historyData.clear();
             historyAdapter.notifyDataSetChanged();
-
-
-
         });
 
         btnSave.setOnClickListener(v -> {
@@ -378,6 +333,7 @@ public class MainActivity extends AppCompatActivity {
 
         checkPermission();
 
+        // 뷰 관련 부분(mainactivity.java 만들 때 생성된 것)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -388,10 +344,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void saveSensorDataToCsv() {  // 로그 뷰에 나타나게 하는 부분 추가
-
         if (sensorDataList.isEmpty()) {
-            Log.d("TEST", "저장할 데이터 없음");
-            logData.add("[Test] 저장할 데이터 없음");
+            Log.d("CSV", "저장할 데이터 없음");
+            logData.add("[CSV] 저장할 데이터 없음");
             logAdapter.notifyDataSetChanged();
             logListView.smoothScrollToPosition(logData.size() - 1);
 
@@ -400,22 +355,22 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             File file = CsvWriter.writeCsv(this, sensorDataList);
-            Log.d("TEST", "CSV 저장 성공: " + file.getAbsolutePath());
-            logData.add("[TEST] CSV 저장 성공: " + file.getAbsolutePath());
+
+            Log.d("CSV", "CSV 저장 성공: " + file.getAbsolutePath());
+            logData.add("[CSV] CSV 저장 성공: " + file.getAbsolutePath());
             logAdapter.notifyDataSetChanged();
             logListView.smoothScrollToPosition(logData.size() - 1);
         } catch (Exception e) {
-            Log.e("TEST", "CSV 저장 실패", e);
-            logData.add("[TEST] CSV 저장 실패: " + e);
+            Log.e("CSV", "CSV 저장 실패", e);
+            logData.add("[CSV] CSV 저장 실패: " + e);
             logAdapter.notifyDataSetChanged();
             logListView.smoothScrollToPosition(logData.size() - 1);
         }
     }
+
     // 권한 체크
     public void checkPermission() {
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // 버전 31 이상
             int scanPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN);
             int connectPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT);
 
@@ -432,8 +387,8 @@ public class MainActivity extends AppCompatActivity {
                 );
             }
 
-        } else {
-
+        }
+        else {
             int locationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
 
             if (locationPermission != PackageManager.PERMISSION_GRANTED) {
@@ -500,9 +455,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         String display =
-                "온도 : " + data.getTemperature() + "\n" +
-                        "습도 : " + data.getHumidity() + ", " + "AQI : " + data.getAqi() + "\n" +
-                        "TVOC : " + data.getTvoc() + ", " + "eCo2 : " + data.getEco2() + "\n" +
+                "[" + deviceName + "]\n" +
+                "온도 : " + data.getTemperature() + ", 습도 : " + data.getHumidity() + "\n" +
+                        "AQI : " + data.getAqi() + ", TVOC : " + data.getTvoc() + ", eCo2 : " + data.getEco2() + "\n" +
                         "앱시간 : " + data.getTime() + "\n" + "센서시간 : " + data.getSensorTime();
 
         runOnUiThread(() -> {
@@ -513,7 +468,7 @@ public class MainActivity extends AppCompatActivity {
                 historyAdapter.notifyDataSetChanged();
                 historyListView.smoothScrollToPosition(historyData.size() - 1);
 
-                addEntry( data.getTemperature(), data.getTvoc());
+                addEntry(data.getTemperature(), data.getTvoc());
                 // main thread(ui) 업데이트 위한 runonuithread
 
                 });
@@ -534,21 +489,16 @@ public class MainActivity extends AppCompatActivity {
             if (location != null) {
                 lat = location.getLatitude();
                 lon = location.getLongitude();
-                Log.d("GPS_ROLE", "실시간 위치 획득 성공: " + lat + ", " + lon);
+                Log.d("GPS", "실시간 위치 획득 성공: " + lat + ", " + lon);
             }
         }
 
-
-        String deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+        String deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID); // 기기 id 가져옴
         DataRequest request = NetworkModule.fromSensorData(data, deviceId, lat, lon);
         transferManager.executeDataTransfer(request);
 
-
         try {
             CsvWriter.appendRow(this, data);
-
-
-
         } catch (Exception e){
             Log.e("CSV", "실시간 저장 실패: " + e);
         }
@@ -578,13 +528,12 @@ public class MainActivity extends AppCompatActivity {
         set.setMode(LineDataSet.Mode.CUBIC_BEZIER); // 부드러운 곡선
         return set;
     }
-
     public void addEntry(float temp, int tvoc) { // 실시간 데이터 추가 함수
         LineData data = lineChart.getData();
 
         if(data != null) {
-            data.addEntry(new Entry(data.getDataSetByIndex(0).getEntryCount(), temp),  0);
-            data.addEntry(new Entry(data.getDataSetByIndex(1).getEntryCount(), tvoc),  1);
+            data.addEntry(new Entry(data.getDataSetByIndex(0).getEntryCount(), temp),  0); // 0번 데이터셋(온도)의 맨끝에 temp 추가
+            data.addEntry(new Entry(data.getDataSetByIndex(1).getEntryCount(), tvoc),  1); // 1번 데이터셋(tvoc)의 맨끝에 tvoc 추가
 
             // 차트에 데이터 변경 알림
             data.notifyDataChanged();
@@ -594,7 +543,5 @@ public class MainActivity extends AppCompatActivity {
             lineChart.setVisibleXRangeMaximum(20);
             lineChart.moveViewToX(data.getEntryCount());
         }
-
-
     }
 }

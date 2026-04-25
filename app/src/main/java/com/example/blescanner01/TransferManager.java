@@ -50,22 +50,10 @@ public class TransferManager {
                     if ("Success".equals(dataResponse.getResult())) { // result가 success라면
                         MainActivity.logData.add("[전송 완료]\n" + dataResponse.getMessage());
                         MainActivity.logAdapter.notifyDataSetChanged();
-
-//                        NetworkModule.showStatusDialog(
-//                                context,
-//                                "전송 완료",
-//                                dataResponse.getMessage()
-//                        );
                     }
                     else {
                         MainActivity.logData.add(dataResponse.getResult() + "\n" + dataResponse.getMessage());
                         MainActivity.logAdapter.notifyDataSetChanged();
-
-//                        NetworkModule.showStatusDialog(
-//                                context,
-//                                dataResponse.getResult(),
-//                                dataResponse.getMessage()
-//                        );
                     }
                 }
                 else { // 성공하지 못한 경우
@@ -79,11 +67,11 @@ public class TransferManager {
 
                     MainActivity.logData.add("[에러]\n" + errorMsg);
                     MainActivity.logAdapter.notifyDataSetChanged();
-//                    NetworkModule.showStatusDialog(
-//                            context,
-//                            "에러",
-//                            errorMsg
-//                    );
+                    NetworkModule.showStatusDialog(
+                            context,
+                            "에러",
+                            errorMsg
+                    );
                 }
             }
 
@@ -97,11 +85,11 @@ public class TransferManager {
                 //사용자 내용 다이얼로그
                 MainActivity.logData.add("[통신 오류]\n요청 실패: " + t.getMessage());
                 MainActivity.logAdapter.notifyDataSetChanged();
-//                NetworkModule.showStatusDialog(
-//                        context,
-//                        "통신 오류",
-//                        "요청 실패: " + t.getMessage()
-//                );
+                NetworkModule.showStatusDialog(
+                        context,
+                        "통신 오류",
+                        "요청 실패: " + t.getMessage()
+                );
             }
         });
     }
