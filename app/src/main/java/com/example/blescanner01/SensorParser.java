@@ -37,7 +37,7 @@ public class SensorParser {
     //규격: Temp(2) + Humid(2) + AQI(1) + TVOC(2) + eCO2(2) + Timestamp(4) = 총 13 Bytes
 
     public static SensorData parse(byte[] rawData, String deviceAddress, String deviceName,
-                                   int rssi, String uuid) {
+                                   int rssi, String uuid, double lat, double lon) {
         if (rawData == null || rawData.length < 13) { return null; }
         if (deviceName == null) { deviceName = "unknown"; }
         if (uuid == null) { uuid = "unknown"; }
@@ -66,6 +66,6 @@ public class SensorParser {
         int eco2 = littleEndianToUInt16(rawData[7], rawData[8]);
 
         return new SensorData(apptime, sensorTime,unixTime, deviceAddress, deviceName,
-                temperature, humidity, aqi, tvoc, eco2, rawHex, rssi, uuid);
+                temperature, humidity, aqi, tvoc, eco2, lat, lon, rawHex, rssi, uuid);
     }
 }

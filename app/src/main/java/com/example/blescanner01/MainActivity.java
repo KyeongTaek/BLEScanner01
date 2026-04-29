@@ -448,7 +448,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void handleScannedData(byte[] rawData, String deviceAddress, String deviceName, int rssi, String uuid) {
-        SensorData data = SensorParser.parse(rawData, deviceAddress, deviceName, rssi, uuid);
+        double lat = 36.6287; // 기본값 (충북대)
+        double lon = 127.4606;
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // GPS 센서로부터 위치 측위 시도
+            android.location.Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+            if (location == null) {
+                // GPS가 안 잡히면 네트워크(와이파이/기지국) 기반 위치 측위 시도
+                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            }
+
+            if (location != null) {
+                lat = location.getLatitude();
+                lon = location.getLongitude();
+                Log.d("GPS", "실시간 위치 획득 성공: " + lat + ", " + lon);
+            }
+        }
+
+        SensorData data = SensorParser.parse(rawData, deviceAddress, deviceName, rssi, uuid, lat, lon);
 
         if (data == null) { // 로그 뷰에 나타나게 하는 부분 추가
             Log.d("TEST", "파싱 실패");
@@ -476,25 +495,6 @@ public class MainActivity extends AppCompatActivity {
 
                 });
         sensorDataList.add(data);
-
-        double lat = 36.6287; // 기본값 (충북대)
-        double lon = 127.4606;
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // GPS 센서로부터 위치 측위 시도
-            android.location.Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-            if (location == null) {
-                // GPS가 안 잡히면 네트워크(와이파이/기지국) 기반 위치 측위 시도
-                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            }
-
-            if (location != null) {
-                lat = location.getLatitude();
-                lon = location.getLongitude();
-                Log.d("GPS", "실시간 위치 획득 성공: " + lat + ", " + lon);
-            }
-        }
 
         String deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID); // 기기 id 가져옴
         DataRequest request = NetworkModule.fromSensorData(data, deviceId, lat, lon);

@@ -20,7 +20,7 @@ public class CsvWriter {
         FileWriter writer = new FileWriter(file, true); // 텍스트 뒤로 이어쓰기 허용
 
         if(isNewFile) {
-            writer.append("app_timestamp,sensor_timestamp,device_name,device_address,rssi,uuid,temperature,humidity,aqi,tvoc,eco2\n");
+            writer.append("app_timestamp,sensor_timestamp,device_name,device_address,rssi,uuid,temperature,humidity,aqi,tvoc,eco2,lat,lon\n");
         }
         // ppt 형식에 맞게 수정
         for (SensorData data : dataList) {
@@ -34,7 +34,9 @@ public class CsvWriter {
                     .append(String.valueOf(data.getHumidity())).append(",")
                     .append(String.valueOf(data.getAqi())).append(",")
                     .append(String.valueOf(data.getTvoc())).append(",")
-                    .append(String.valueOf(data.getEco2())).append("\n");
+                    .append(String.valueOf(data.getEco2())).append(",")
+                    .append(String.valueOf(data.getLat())).append(",")
+                    .append(String.valueOf(data.getLon())).append("\n");
 
         }
 
@@ -54,7 +56,7 @@ public class CsvWriter {
 
         FileWriter writer = new FileWriter(file, true);
         if (isNewFile) {
-            writer.append("app_timestamp,sensor_timestamp, device_name,device_address,rssi,uuid,temperature,humidity,aqi,tvoc,eco2\n");
+            writer.append("app_timestamp,sensor_timestamp, device_name,device_address,rssi,uuid,temperature,humidity,aqi,tvoc,eco2,lat,lon\n");
         }
 
         writer.append(csvSafe(data.getTime())).append(",")
@@ -67,7 +69,9 @@ public class CsvWriter {
                 .append(String.valueOf(data.getHumidity())).append(",")
                 .append(String.valueOf(data.getAqi())).append(",")
                 .append(String.valueOf(data.getTvoc())).append(",")
-                .append(String.valueOf(data.getEco2())).append("\n");
+                .append(String.valueOf(data.getEco2())).append(",")
+                .append(String.valueOf(data.getLat())).append(",")
+                .append(String.valueOf(data.getLon())).append("\n");
 
         writer.flush();
         writer.close();
