@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.graphics.Color;
 import android.location.Location;
+import android.location.LocationListener;
 import android.os.Bundle;
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -80,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
 
     List<Map<String, String>> scanData; // scan 정보 추가
     SimpleAdapter scanAdapter; // scan 리스트에 넣어주는 어댑터 추가
+    private double currentLat = 36.6287; // 기본값
+    private double currentLon = 127.4606;
+    private LocationListener locationListener;
     List<BluetoothDevice> deviceList = new ArrayList<>(); // 중복 제거하기 위한 디바이스 리스트
     List<String> macList = new ArrayList<>(); // 디바이스를 필터링하기 위한 mac 주소 리스트
 
@@ -158,7 +162,23 @@ public class MainActivity extends AppCompatActivity {
             btnScan.setEnabled(false); // 스캔 버튼 누르지 않게
             btnStop.setEnabled(true); // 스톱 버튼 누를 수 있게
 
-            // 이미 스캔 중이면 중복 실행 방지
+            locationListener = new LocationListener() {
+                @Override
+                public void onLocationChanged(Location location) {
+                    currentLat = location.getLatitude();
+                    currentLon = location.getLongitude();
+                    Log.d("GPS_UPDATE", "location: " + currentLat + ", " + currentLon);
+                }
+            };
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                // GPS 센서로부터 위치 측위 시도
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
+                // 네트워크(와이파이/기지국) 기반 위치 측위 시도
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, locationListener);
+            }
+
+                // 이미 스캔 중이면 중복 실행 방지
             if (isScanning) {
                 logData.add("이미 스캔 중");
                 logAdapter.notifyDataSetChanged();
@@ -307,6 +327,8 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+            locationManager.removeUpdates(locationListener);
+
             bluetoothLeScanner.stopScan(scanCallback);
             scanCallback = null;
 
@@ -448,24 +470,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void handleScannedData(byte[] rawData, String deviceAddress, String deviceName, int rssi, String uuid) {
-        double lat = 36.6287; // 기본값 (충북대)
-        double lon = 127.4606;
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // GPS 센서로부터 위치 측위 시도
-            android.location.Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-            if (location == null) {
-                // GPS가 안 잡히면 네트워크(와이파이/기지국) 기반 위치 측위 시도
-                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            }
-
-            if (location != null) {
-                lat = location.getLatitude();
-                lon = location.getLongitude();
-                Log.d("GPS", "실시간 위치 획득 성공: " + lat + ", " + lon);
-            }
-        }
+        double lat = currentLat;
+        double lon = currentLon;
 
         SensorData data = SensorParser.parse(rawData, deviceAddress, deviceName, rssi, uuid, lat, lon);
 
